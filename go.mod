@@ -13,6 +13,7 @@ require (
 	github.com/go-openapi/validate v0.20.2
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/spf13/cobra v0.0.3
 	go.mongodb.org/mongo-driver v1.5.3 // indirect
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	gopkg.in/yaml.v2 v2.4.0
