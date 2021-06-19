@@ -1,4 +1,4 @@
-.PHONY: all fmt build test doc
+.PHONY: all fmt build test utils doc
 
 GOPATH ?= $(CURDIR)
 GOBIN ?= $(GOPATH)/bin
@@ -28,3 +28,5 @@ doc: $(GODOC)
 	@echo "http://127.0.0.1:$(GODOC_PORT)"
 	@$(GODOC) -http=:$(GODOC_PORT) \
 		-index -links=true
+
+utils: $(GODOC)
