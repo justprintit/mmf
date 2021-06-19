@@ -6,7 +6,7 @@ import (
 
 type Config struct {
 	ClientId     string `yaml:"client_key"`
-	ClientSecret string `yaml:"client_secret,omitempty:`
+	ClientSecret string `yaml:"client_secret,omitempty"`
 }
 
 func MarshalConfig(c *Config) ([]byte, error) {
