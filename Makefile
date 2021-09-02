@@ -8,11 +8,13 @@ GODOC_PORT ?= 9090
 GO ?= go
 GODOC ?= $(GOBIN)/godoc
 GOGET ?= $(GO) get -v
+GOFMT ?= gofmt
+GOFMT_FLAGS = -w -l -s
 
 all: fmt build
 
 fmt:
-	$(GO) fmt ./...
+	@find . -name '*.go' | xargs -r $(GOFMT) $(GOFMT_FLAGS)
 	$(GO) mod tidy || true
 
 build:
