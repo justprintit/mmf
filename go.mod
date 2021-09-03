@@ -11,11 +11,10 @@ require (
 	github.com/go-openapi/strfmt v0.20.1
 	github.com/go-openapi/swag v0.19.15
 	github.com/go-openapi/validate v0.20.2
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/sethvargo/go-password v0.2.0
-	github.com/spf13/cobra v0.0.3
+	github.com/spf13/cobra v1.2.1
 	go.mongodb.org/mongo-driver v1.5.3 // indirect
+	go.sancus.dev/config v0.4.2
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
-	gopkg.in/yaml.v2 v2.4.0
 )

@@ -27,72 +27,29 @@ func GenerateClientId() (string, error) {
 		return "", err
 	}
 
-	s, err := generateClientId(gen)
-	if err != nil {
-		return "", err
-	}
-
-	return s, nil
-}
-
-func generateClientSecret(gen *password.Generator) (string, error) {
-	return gen.Generate(32, 8, 4, false, true)
-}
-
-func GenerateClientSecret() (string, error) {
-	gen, err := newPasswordGenerator()
-	if err != nil {
-		return "", err
-	}
-
-	s, err := generateClientSecret(gen)
-	if err != nil {
-		return "", err
-	}
-
-	return s, nil
-}
-
-func GenerateClientPair() (string, string, error) {
-	gen, err := newPasswordGenerator()
-	if err != nil {
-		return "", "", err
-	}
-
-	id, err := generateClientId(gen)
-	if err != nil {
-		return "", "", err
-	}
-
-	secret, err := generateClientSecret(gen)
-	if err != nil {
-		return "", "", err
-	}
-
-	return id, secret, nil
+	return generateClientId(gen)
 }
 
 var generateCmd = &cobra.Command{
-	Use: "generate outputs a new config file",
+	Use:   "generate",
+	Short: "generate outputs a new config file",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		id, secret, err := GenerateClientPair()
+		// ClientId
+		id, err := GenerateClientId()
 		if err != nil {
 			return err
 		}
 
-		cfg := mmf.Config{
-			ClientId:     id,
-			ClientSecret: secret,
+		// Config
+		cfg := &Config{
+			Auth: mmf.Config{
+				ClientId: id,
+			},
 		}
 
-		if buf, err := mmf.MarshalConfig(&cfg); err != nil {
-			return err
-		} else if _, err := os.Stdout.Write(buf); err != nil {
-			return err
-		} else {
-			return nil
-		}
+		_, err = cfg.WriteTo(os.Stdout)
+		return err
 	},
 }
 
