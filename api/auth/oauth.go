@@ -6,17 +6,10 @@ import (
 	"go.sancus.dev/core/errors"
 )
 
-const (
-	AuthBaseURL = "https://auth.myminifactory.com"
-
-	AuthorizePath = "/web/authorize"
-	TokensPath    = "/v1/oauth/tokens"
-)
-
 // Endpoint is MMF's OAuth 2.0 endpoint
 var Endpoint = oauth2.Endpoint{
-	AuthURL:   AuthBaseURL + AuthorizePath,
-	TokenURL:  AuthBaseURL + TokensPath,
+	AuthURL:   "https://auth.myminifactory.com/web/authorize",
+	TokenURL:  "https://auth.myminifactory.com/v1/oauth/tokens",
 	AuthStyle: oauth2.AuthStyleInHeader,
 }
 
