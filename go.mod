@@ -21,3 +21,9 @@ require (
 	gopkg.in/retry.v1 v1.0.3 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace (
+	go.sancus.dev/config => ../../../go.sancus.dev/config
+	go.sancus.dev/core => ../../../go.sancus.dev/core
+	go.sancus.dev/web => ../../../go.sancus.dev/web
+)
