@@ -1,9 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
 
 	"go.sancus.dev/config/flags"
 	"go.sancus.dev/config/hcl"
@@ -43,4 +47,34 @@ func (c *Config) Save(filename string) error {
 		_, err = c.WriteTo(f)
 	}
 	return err
+}
+
+func (c *Config) Setup() error {
+	// data directory
+	c.Data = filepath.Clean(c.Data)
+	if fi, err := os.Stat(c.Data); fi.IsDir() {
+		// ready
+	} else if err == nil {
+		// exists, but not a directory
+		return &os.PathError{
+			Op:   fmt.Sprintf("%T.%s", c, "Setup"),
+			Path: c.Data,
+			Err:  syscall.ENOTDIR,
+		}
+	} else if err := os.MkdirAll(c.Data, 0755); err != nil {
+		// failed to create
+		return err
+	}
+
+	// CookieJar
+	if len(c.Cookies) == 0 {
+		flags.SetDefaults(c.Cookies)
+	}
+	if strings.IndexRune(c.Cookies, os.PathSeparator) == -1 {
+		// no '/', place it inside `data_dir`
+		c.Cookies = filepath.Join(c.Data, c.Cookies)
+	}
+	c.Cookies = filepath.Clean(c.Cookies)
+
+	return nil
 }
