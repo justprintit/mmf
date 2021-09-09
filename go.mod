@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/frankban/quicktest v1.13.1 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/json-iterator/go v1.1.11
 	github.com/juju/go4 v0.0.0-20160222163258-40d72ab9641a // indirect
 	github.com/juju/persistent-cookiejar v0.0.0-20171026135701-d5e5a8405ef9
 	github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27

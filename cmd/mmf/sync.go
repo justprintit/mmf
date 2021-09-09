@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/justprintit/mmf/api/library"
+	"github.com/justprintit/mmf/api/library/json"
 )
 
 type Sync struct {
@@ -34,9 +35,9 @@ func (m *Sync) Run() error {
 
 	defer m.Save() // Save cookies
 
-	resp, err := client.Get("shared")
+	data, err := client.GetLibraryData("shared")
 	if err == nil {
-		_, err = os.Stdout.Write(resp.Body())
+		err = json.Write(data, "  ", os.Stdout)
 	}
 
 	return err

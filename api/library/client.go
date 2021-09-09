@@ -7,6 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 
 	"github.com/justprintit/mmf"
+	"github.com/justprintit/mmf/api/library/json"
 )
 
 const (
@@ -75,12 +76,22 @@ func (c *Client) J(referer string, args ...interface{}) *resty.Request {
 	return req
 }
 
-func (c *Client) Head(library string) (*resty.Response, error) {
-	path := fmt.Sprintf("/data-library/%s", library)
-	return c.J("/library?v=%s", library).Head(path)
-}
-
-func (c *Client) Get(library string) (*resty.Response, error) {
+func (c *Client) GetLibrary(library string) (*resty.Response, error) {
 	path := fmt.Sprintf("/data-library/%s", library)
 	return c.J("/library?v=%s", library).Get(path)
+}
+
+func (c *Client) GetLibraryData(library string) (*json.Users, error) {
+	resp, err := c.GetLibrary(library)
+	if err != nil {
+		return nil, err
+	}
+
+	out := &json.Users{}
+	err = json.NewDecoderBytes(resp.Body()).Decode(out)
+	if err != nil {
+		return nil, err
+	} else {
+		return out, nil
+	}
 }
