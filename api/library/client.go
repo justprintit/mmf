@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
+
+	"github.com/justprintit/mmf"
 )
 
 const (
@@ -14,30 +16,32 @@ const (
 type Client struct {
 	*resty.Client
 
+	Credentials  mmf.Credentials
 	TraceEnabled bool
 }
 
-func newClient(rc *resty.Client) *Client {
+func newClient(cred mmf.Credentials, rc *resty.Client) *Client {
 	c := &Client{
-		Client: rc,
+		Client:      rc,
+		Credentials: cred,
 	}
 	c.SetHostURL(DefaultHost)
 	return c
 }
 
-func New() *Client {
+func New(cred mmf.Credentials) *Client {
 	rc := resty.New()
-	return newClient(rc)
+	return newClient(cred, rc)
 }
 
-func NewWithClient(hc *http.Client) *Client {
+func NewWithClient(cred mmf.Credentials, hc *http.Client) *Client {
 	rc := resty.NewWithClient(hc)
-	return newClient(rc)
+	return newClient(cred, rc)
 }
 
-func NewWithTransport(transport http.RoundTripper) *Client {
+func NewWithTransport(cred mmf.Credentials, transport http.RoundTripper) *Client {
 	rc := resty.New().SetTransport(transport)
-	return newClient(rc)
+	return newClient(cred, rc)
 }
 
 func (c *Client) R(referer string, args ...interface{}) *resty.Request {
