@@ -33,3 +33,18 @@ func (c *Client) GetPurchasesLibrary() (*json.Objects, error) {
 		return out, nil
 	}
 }
+
+func (c *Client) GetPledgesLibrary() (*json.Objects, error) {
+	resp, err := c.GetLibrary("campaigns")
+	if err != nil {
+		return nil, err
+	}
+
+	out := &json.Objects{}
+	err = json.NewDecoderBytes(resp.Body()).Decode(out)
+	if err != nil {
+		return nil, err
+	} else {
+		return out, nil
+	}
+}

@@ -49,6 +49,12 @@ func (m *Sync) Run() error {
 		return err
 	}
 
+	if data, err := client.GetPledgesLibrary(); err != nil {
+		return errors.Wrap(err, "GetPledgesLibrary")
+	} else if err = json.Write(data, "  ", os.Stdout); err != nil {
+		return err
+	}
+
 	return nil
 }
 
