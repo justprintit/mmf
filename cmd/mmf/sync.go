@@ -11,6 +11,8 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
+	"go.sancus.dev/core/errors"
+
 	"github.com/justprintit/mmf/api/library"
 	"github.com/justprintit/mmf/api/library/json"
 )
@@ -35,12 +37,13 @@ func (m *Sync) Run() error {
 
 	defer m.Save() // Save cookies
 
-	data, err := client.GetLibraryData("shared")
-	if err == nil {
-		err = json.Write(data, "  ", os.Stdout)
+	if data, err := client.GetSharedLibrary(); err != nil {
+		return errors.Wrap(err, "GetSharedLibrary")
+	} else if err = json.Write(data, "  ", os.Stdout); err != nil {
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (m *Sync) LogRequest(req *http.Request) {
