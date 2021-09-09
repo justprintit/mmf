@@ -26,7 +26,10 @@ func newClient(cred mmf.Credentials, rc *resty.Client) *Client {
 		Credentials: cred,
 	}
 	c.SetHostURL(DefaultHost)
-	return c
+
+	// inject auto-login middleware
+	hc := rc.GetClient()
+	return c.SetTransport(hc.Transport)
 }
 
 func New(cred mmf.Credentials) *Client {
