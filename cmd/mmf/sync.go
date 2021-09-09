@@ -43,6 +43,12 @@ func (m *Sync) Run() error {
 		return err
 	}
 
+	if data, err := client.GetPurchasesLibrary(); err != nil {
+		return errors.Wrap(err, "GetPurchasesLibrary")
+	} else if err = json.Write(data, "  ", os.Stdout); err != nil {
+		return err
+	}
+
 	return nil
 }
 
