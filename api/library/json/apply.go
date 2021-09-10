@@ -2,9 +2,23 @@ package json
 
 import (
 	"log"
+	"strings"
 
 	"github.com/justprintit/mmf/api/library/types"
 )
+
+func (w *User) Export() *types.User {
+	name := strings.TrimSpace(w.Name)
+	if len(name) == 0 {
+		name = w.Username
+	}
+
+	return &types.User{
+		Username: w.Username,
+		Name:     name,
+		Avatar:   w.Avatar,
+	}
+}
 
 func (w *Users) Apply(d *types.Library) error {
 	n := len(w.User)
@@ -13,21 +27,13 @@ func (w *Users) Apply(d *types.Library) error {
 	}
 
 	for i, v := range w.User {
-		log.Printf("User[%v/%v]: %s (%s)", i, n, v.Username, v.Name)
+		u := v.Export()
 
-		if v.Name == "" {
-			v.Name = v.Username
-		}
-
-		u := types.User{
-			Username: v.Username,
-			Name:     v.Name,
-			Avatar:   v.Avatar,
-		}
+		log.Printf("User[%v/%v]: %s (%s)", i, n, u.Name, u.Username)
 
 		if err := d.AddUser(u); err != nil {
 			log.Printf("User[%v/%v]: Failed to add User: %s",
-				i, n, v.Avatar, err)
+				i, n, err)
 		}
 	}
 

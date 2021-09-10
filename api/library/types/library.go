@@ -7,5 +7,5 @@ import (
 type Library struct {
 	mu sync.Mutex
 
-	User map[string]User `json:",omitempty"`
+	User map[string]*User `json:",omitempty"`
 }

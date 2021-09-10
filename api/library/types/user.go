@@ -10,7 +10,7 @@ type User struct {
 	Avatar   string `json:",omitempty"`
 }
 
-func (w *User) Merge(u User) error {
+func (w *User) Merge(u *User) error {
 	if len(u.Username) > 0 {
 		UpdateString("Username", &w.Username, u.Username)
 	}
@@ -23,12 +23,12 @@ func (w *User) Merge(u User) error {
 	return nil
 }
 
-func (w *Library) AddUser(u User) error {
+func (w *Library) AddUser(u *User) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	if w.User == nil {
-		w.User = make(map[string]User, 1)
+		w.User = make(map[string]*User, 1)
 	}
 
 	if name := u.Username; len(name) == 0 {
