@@ -10,7 +10,7 @@ type User struct {
 	Avatar   string `json:",omitempty"`
 }
 
-func (w *User) Merge(u *User) error {
+func (w *User) merge(u *User) error {
 	if len(u.Username) > 0 {
 		UpdateString("Username", &w.Username, u.Username)
 	}
@@ -31,14 +31,14 @@ func (w *Library) AddUser(u *User) error {
 		w.User = make(map[string]*User, 1)
 	}
 
-	if name := u.Username; len(name) == 0 {
-		return errors.ErrMissingField("Name")
-	} else if v, ok := w.User[u.Username]; ok {
+	if user := u.Username; len(user) == 0 {
+		return errors.ErrMissingField("Username")
+	} else if v, ok := w.User[user]; ok {
 		// exists
-		return v.Merge(u)
+		return v.merge(u)
 	} else {
 		// new
-		w.User[u.Username] = u
+		w.User[user] = u
 		return nil
 	}
 }
