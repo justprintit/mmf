@@ -13,6 +13,10 @@ type User struct {
 	Groups   []*Group `json:",omitempty"`
 }
 
+func (u *User) GetSharedGroupsURL() string {
+	return "/data-library/shared/" + u.Username
+}
+
 func (w *Library) AddUser(u *User) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()

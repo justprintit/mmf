@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"go.sancus.dev/core/errors"
 )
 
@@ -8,7 +10,6 @@ type Group struct {
 	entry `json:"-"`
 
 	Name string
-	URL  string
 	Id   int
 
 	Objects   []*Object `yaml:",omitempty"`
@@ -16,6 +17,10 @@ type Group struct {
 }
 
 type Object struct{}
+
+func (g *Group) GetObjectsURL() string {
+	return fmt.Sprintf("/data-library/group/%v", g.Id)
+}
 
 func (g *Group) AddSubgroup(sg *Group) error {
 	w := g.entry.Library()

@@ -66,16 +66,9 @@ func (w *Users) Apply(d *types.Library) error {
 
 func (w *Group) Export() *types.Group {
 	if id, ok := w.Id.Int(); ok {
-		var url string
-
-		if u, ok := w.API["getObjects"]; ok {
-			url = u.URL
-		}
-
 		return &types.Group{
 			Id:   id,
 			Name: strings.TrimSpace(w.Name),
-			URL:  url,
 		}
 	}
 	return nil
