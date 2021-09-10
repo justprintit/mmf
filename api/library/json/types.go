@@ -64,27 +64,25 @@ func (w *GroupId) MarshalJSON() ([]byte, error) {
 	}
 }
 
-type GroupItems struct {
-	s []Object
-	m map[string]Object
-}
+type GroupItems []Object
 
 func (w *GroupItems) UnmarshalJSON(data []byte) error {
-	if data[0] == '[' {
-		w.m = nil
-		return json.Unmarshal(data, &w.s)
-	} else {
-		w.s = nil
-		return json.Unmarshal(data, &w.m)
-	}
-}
+	var s []Object
+	var err error
 
-func (w *GroupItems) MarshalJSON() ([]byte, error) {
-	if w.m == nil {
-		return json.Marshal(w.s)
+	if data[0] == '[' {
+		err = json.Unmarshal(data, &s)
 	} else {
-		return json.Marshal(w.m)
+		var m map[string]Object
+		err = json.Unmarshal(data, &m)
+
+		for _, v := range m {
+			s = append(s, v)
+		}
 	}
+
+	*w = s
+	return err
 }
 
 type Objects struct {
