@@ -5,9 +5,12 @@ import (
 )
 
 type User struct {
+	entry `json:"-"`
+
 	Username string
 	Name     string
-	Avatar   string `json:",omitempty"`
+	Avatar   string   `json:",omitempty"`
+	Groups   []*Group `json:",omitempty"`
 }
 
 func (w *Library) AddUser(u *User) error {
@@ -23,9 +26,15 @@ func (w *Library) AddUser(u *User) error {
 	} else if _, ok := w.User[user]; ok {
 		// exists
 		return errors.New("%s[%q]: Already exists", "User", user)
+	} else if err := w.checkNewGroups(u.Groups...); err != nil {
+		return errors.Wrap(err, "%s[%q]: Group already exists", "User", user)
 	} else {
 		// new
+		u.root = w
 		w.User[user] = u
+		for _, g := range u.Groups {
+			w.registerGroup(g)
+		}
 		return nil
 	}
 }

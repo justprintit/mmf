@@ -28,14 +28,22 @@ type Group struct {
 	Name     string
 	Objects  int            `json:"total_count_objects,omitempty"`
 	Count    json.Number    `json:"total_count,omitempty"`
-	Children []Group        `json:"childrens,omitempty"`
 	Items    GroupItems     `json:",omitempty"`
+	Children []Group        `json:"childrens,omitempty"`
 	API      map[string]API `json:"apis,omitempty"`
 }
 
 type GroupId struct {
 	id int
 	s  string
+}
+
+func (w *GroupId) Int() (int, bool) {
+	if len(w.s) > 0 {
+		return 0, false
+	} else {
+		return w.id, true
+	}
 }
 
 func (w *GroupId) UnmarshalJSON(data []byte) error {
