@@ -10,19 +10,6 @@ type User struct {
 	Avatar   string `json:",omitempty"`
 }
 
-func (w *User) merge(u *User) error {
-	if len(u.Username) > 0 {
-		UpdateString("Username", &w.Username, u.Username)
-	}
-	if len(u.Name) > 0 {
-		UpdateString("Name", &w.Name, u.Name)
-	}
-	if len(u.Avatar) > 0 {
-		UpdateString("Avatar", &w.Avatar, u.Avatar)
-	}
-	return nil
-}
-
 func (w *Library) AddUser(u *User) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -33,9 +20,9 @@ func (w *Library) AddUser(u *User) error {
 
 	if user := u.Username; len(user) == 0 {
 		return errors.ErrMissingField("Username")
-	} else if v, ok := w.User[user]; ok {
+	} else if _, ok := w.User[user]; ok {
 		// exists
-		return v.merge(u)
+		return errors.New("%s[%q]: Already exists", "User", user)
 	} else {
 		// new
 		w.User[user] = u
