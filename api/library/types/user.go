@@ -1,6 +1,8 @@
 package types
 
 import (
+	"net/url"
+
 	"go.sancus.dev/core/errors"
 )
 
@@ -14,7 +16,7 @@ type User struct {
 }
 
 func (u *User) GetSharedGroupsURL() string {
-	return "/data-library/shared/" + u.Username
+	return "/data-library/shared/" + url.PathEscape(u.Username)
 }
 
 func (w *Library) AddUser(u *User) error {
