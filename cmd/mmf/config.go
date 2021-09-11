@@ -36,7 +36,7 @@ func (c *Config) ReadInFile(filename string) error {
 	return hcl.LoadFile(filename, nil, c)
 }
 
-func (c *Config) WriteTo(out io.Writer) (int, error) {
+func (c *Config) WriteTo(out io.Writer) (int64, error) {
 	return hcl.WriteTo(out, c)
 }
 
