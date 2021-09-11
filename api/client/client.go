@@ -3,8 +3,10 @@ package client
 import (
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
 
 	"github.com/go-resty/resty/v2"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/justprintit/mmf"
 )
@@ -34,7 +36,7 @@ func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
 	c.SetHostURL(DefaultHost)
 
 	// inject auto-login middleware
-	hc := rc.GetClient()
+	hc := c.Client.GetClient()
 	return c.SetTransport(hc.Transport)
 }
 
@@ -50,6 +52,17 @@ func NewWithClient(cred mmf.Credentials, hc *http.Client) *Client {
 func NewWithTransport(cred mmf.Credentials, transport http.RoundTripper) *Client {
 	rc := resty.New().SetTransport(transport)
 	return new(Client).Init(cred, rc)
+}
+
+func NewWithOptions(options ...ClientOption) (*Client, error) {
+	c := new(Client)
+	for _, opt := range options {
+		if err := opt.Apply(c); err != nil {
+			return nil, err
+		}
+	}
+	c.Init(mmf.Credentials{}, nil)
+	return c, nil
 }
 
 func (c *Client) R(referer string, args ...interface{}) *resty.Request {
@@ -78,4 +91,48 @@ func (c *Client) J(referer string, args ...interface{}) *resty.Request {
 	req := c.R(referer, args...)
 	req.SetHeader("Accept", "application/json")
 	return req
+}
+
+type ClientOption interface {
+	Apply(c *Client) error
+}
+
+type ClientOptionFunc func(*Client) error
+
+func (f ClientOptionFunc) Apply(c *Client) error {
+	return f(c)
+}
+
+func WithCredentials(cred mmf.Credentials) ClientOption {
+	return ClientOptionFunc(func(c *Client) error {
+		c.Credentials = cred
+		return nil
+	})
+}
+
+func WithTransport(transport http.RoundTripper) ClientOption {
+	return ClientOptionFunc(func(c *Client) error {
+		c.Client = resty.New().SetTransport(transport)
+		return nil
+	})
+}
+
+func WithCookieJar(jar http.CookieJar) ClientOption {
+	return ClientOptionFunc(func(c *Client) error {
+		if jar == nil {
+			var err error
+
+			jar, err = cookiejar.New(&cookiejar.Options{
+				PublicSuffixList: publicsuffix.List,
+			})
+
+			if err != nil {
+				return err
+			}
+
+		}
+
+		c.SetCookieJar(jar)
+		return nil
+	})
 }
