@@ -112,7 +112,10 @@ func WithCredentials(cred mmf.Credentials) ClientOption {
 
 func WithTransport(transport http.RoundTripper) ClientOption {
 	return ClientOptionFunc(func(c *Client) error {
-		c.Client = resty.New().SetTransport(transport)
+		if c.Client == nil {
+			c.Client = resty.New()
+		}
+		c.Client.SetTransport(transport)
 		return nil
 	})
 }
@@ -130,6 +133,10 @@ func WithCookieJar(jar http.CookieJar) ClientOption {
 				return err
 			}
 
+		}
+
+		if c.Client == nil {
+			c.Client = resty.New()
 		}
 
 		c.SetCookieJar(jar)
