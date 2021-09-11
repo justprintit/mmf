@@ -17,6 +17,7 @@ import (
 )
 
 type Sync struct {
+	*library.Client
 	done chan struct{}
 
 	Cookies *cookiejar.Jar
@@ -25,12 +26,22 @@ type Sync struct {
 
 func (m *Sync) Init() error {
 	// client
-	client := library.NewWithTransport(m.Config.Auth, &loghttp.Transport{
-		LogRequest:  m.LogRequest,
-		LogResponse: m.LogResponse,
-	})
-	client.SetCookieJar(m.Cookies)
-	client.TraceEnabled = true
+	client, err := library.NewWithOptions(
+		library.WithCredentials(m.Config.Auth),
+		library.WithTransport(&loghttp.Transport{
+			LogRequest:  m.LogRequest,
+			LogResponse: m.LogResponse,
+		}),
+		library.WithCookieJar(m.Cookies),
+		library.WithDataDir(m.Config.Data),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	m.Client = client
+	m.Client.TraceEnabled = true
 
 	m.done = make(chan struct{})
 	return nil
