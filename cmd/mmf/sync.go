@@ -1,9 +1,11 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
-	"sync"
+	"os/signal"
+	"syscall"
 
 	"github.com/juju/persistent-cookiejar"
 	"github.com/motemen/go-loghttp"
@@ -11,20 +13,17 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
-	"go.sancus.dev/core/errors"
-
 	"github.com/justprintit/mmf/api/library"
-	"github.com/justprintit/mmf/api/library/json"
 )
 
 type Sync struct {
-	sync.Mutex
+	done chan struct{}
 
 	Cookies *cookiejar.Jar
 	Config  *Config
 }
 
-func (m *Sync) Run() error {
+func (m *Sync) Init() error {
 	// client
 	client := library.NewWithTransport(m.Config.Auth, &loghttp.Transport{
 		LogRequest:  m.LogRequest,
@@ -33,29 +32,15 @@ func (m *Sync) Run() error {
 	client.SetCookieJar(m.Cookies)
 	client.TraceEnabled = true
 
-	// TODO: handle SIGTERM
+	m.done = make(chan struct{})
+	return nil
+}
 
+func (m *Sync) Run() {
+	defer close(m.done)
 	defer m.Save() // Save cookies
 
-	if data, err := client.GetSharedLibrary(); err != nil {
-		return errors.Wrap(err, "GetSharedLibrary")
-	} else if err = json.Write(data, "  ", os.Stdout); err != nil {
-		return err
-	}
-
-	if data, err := client.GetPurchasesLibrary(); err != nil {
-		return errors.Wrap(err, "GetPurchasesLibrary")
-	} else if err = json.Write(data, "  ", os.Stdout); err != nil {
-		return err
-	}
-
-	if data, err := client.GetPledgesLibrary(); err != nil {
-		return errors.Wrap(err, "GetPledgesLibrary")
-	} else if err = json.Write(data, "  ", os.Stdout); err != nil {
-		return err
-	}
-
-	return nil
+	log.Println("Started.")
 }
 
 func (m *Sync) LogRequest(req *http.Request) {
@@ -66,13 +51,22 @@ func (m *Sync) LogResponse(resp *http.Response) {
 	loghttp.DefaultLogResponse(resp)
 }
 
-func (m *Sync) Save() {
-	m.Lock()
-	defer m.Unlock()
+func (m *Sync) Reload() error {
+	return nil
+}
 
+func (m *Sync) Cancel() {
+}
+
+func (m *Sync) Done() <-chan struct{} {
+	return m.done
+}
+
+func (m *Sync) Save() {
 	if len(cfg.Cookies) > 0 {
 		m.Cookies.Save()
 	}
+	log.Println("Done.")
 }
 
 var syncCmd = &cobra.Command{
@@ -91,12 +85,44 @@ var syncCmd = &cobra.Command{
 			return err
 		}
 
+		// prepare sync client
 		sync := &Sync{
 			Cookies: jar,
 			Config:  cfg,
 		}
 
-		return sync.Run()
+		if err := sync.Init(); err != nil {
+			return err
+		}
+
+		// watch signals
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+		defer close(sig)
+
+		// spawn synchronizer
+		go sync.Run()
+
+		// and wait
+		for {
+			select {
+			case signum := <-sig:
+				// signal received
+				switch signum {
+				case syscall.SIGHUP:
+					if err := sync.Reload(); err != nil {
+						log.Println("Reload failed:", err)
+					}
+				case syscall.SIGINT, syscall.SIGTERM:
+					log.Println("Terminating...")
+					sync.Cancel()
+				}
+			case <-sync.Done():
+				// client terminated
+				return nil
+			}
+		}
+
 	},
 }
 
