@@ -20,11 +20,17 @@ type Client struct {
 	TraceEnabled bool
 }
 
-func newClient(cred mmf.Credentials, rc *resty.Client) *Client {
-	c := &Client{
-		Client:      rc,
-		Credentials: cred,
+func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
+	if rc != nil {
+		c.Client = rc
+	} else if c.Client == nil {
+		c.Client = resty.New()
 	}
+
+	if len(cred.Username) > 0 {
+		c.Credentials = cred
+	}
+
 	c.SetHostURL(DefaultHost)
 
 	// inject auto-login middleware
@@ -33,18 +39,17 @@ func newClient(cred mmf.Credentials, rc *resty.Client) *Client {
 }
 
 func New(cred mmf.Credentials) *Client {
-	rc := resty.New()
-	return newClient(cred, rc)
+	return new(Client).Init(cred, nil)
 }
 
 func NewWithClient(cred mmf.Credentials, hc *http.Client) *Client {
 	rc := resty.NewWithClient(hc)
-	return newClient(cred, rc)
+	return new(Client).Init(cred, rc)
 }
 
 func NewWithTransport(cred mmf.Credentials, transport http.RoundTripper) *Client {
 	rc := resty.New().SetTransport(transport)
-	return newClient(cred, rc)
+	return new(Client).Init(cred, rc)
 }
 
 func (c *Client) R(referer string, args ...interface{}) *resty.Request {

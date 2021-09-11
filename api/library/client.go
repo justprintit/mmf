@@ -11,25 +11,26 @@ import (
 )
 
 type Client struct {
-	*client.Client
+	client.Client
+}
+
+func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
+	c.Client.Init(cred, rc)
+	return c
 }
 
 func New(cred mmf.Credentials) *Client {
-	return &Client{
-		Client: client.New(cred),
-	}
+	return new(Client).Init(cred, nil)
 }
 
 func NewWithClient(cred mmf.Credentials, hc *http.Client) *Client {
-	return &Client{
-		Client: client.NewWithClient(cred, hc),
-	}
+	rc := resty.NewWithClient(hc)
+	return new(Client).Init(cred, rc)
 }
 
 func NewWithTransport(cred mmf.Credentials, transport http.RoundTripper) *Client {
-	return &Client{
-		Client: client.NewWithTransport(cred, transport),
-	}
+	rc := resty.New().SetTransport(transport)
+	return new(Client).Init(cred, rc)
 }
 
 func (c *Client) GetLibrary(library string) (*resty.Response, error) {
