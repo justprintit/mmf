@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -18,8 +19,6 @@ import (
 
 type Sync struct {
 	*library.Client
-	done chan struct{}
-
 	Cookies *cookiejar.Jar
 	Config  *Config
 }
@@ -43,15 +42,12 @@ func (m *Sync) Init() error {
 	m.Client = client
 	m.Client.TraceEnabled = true
 
-	m.done = make(chan struct{})
+	// setup
+	m.Add(func(c *library.Client, ctx context.Context) error {
+		return c.RefreshLibraries(ctx)
+	})
+
 	return nil
-}
-
-func (m *Sync) Run() {
-	defer close(m.done)
-	defer m.Save() // Save cookies
-
-	log.Println("Started.")
 }
 
 func (m *Sync) LogRequest(req *http.Request) {
@@ -60,17 +56,6 @@ func (m *Sync) LogRequest(req *http.Request) {
 
 func (m *Sync) LogResponse(resp *http.Response) {
 	loghttp.DefaultLogResponse(resp)
-}
-
-func (m *Sync) Reload() error {
-	return nil
-}
-
-func (m *Sync) Cancel() {
-}
-
-func (m *Sync) Done() <-chan struct{} {
-	return m.done
 }
 
 func (m *Sync) Save() {
@@ -111,8 +96,9 @@ var syncCmd = &cobra.Command{
 		signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 		defer close(sig)
 
-		// spawn synchronizer
-		go sync.Run()
+		log.Println("Starting...")
+		defer sync.Save() // Save cookies
+		sync.Start()
 
 		// and wait
 		for {
