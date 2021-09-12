@@ -2,6 +2,7 @@ package library
 
 import (
 	"context"
+	"log"
 	"sync"
 
 	"go.sancus.dev/core/queue"
@@ -29,12 +30,9 @@ func (wq *WorkQueue) Start() {
 	done := make(chan error, 1)
 
 	// init
-	*wq = WorkQueue{
-		c:      wq.c,
-		done:   done,
-		ctx:    ctx,
-		cancel: cancel,
-	}
+	wq.done = done
+	wq.ctx = ctx
+	wq.cancel = cancel
 
 	go func() {
 		defer close(done)
@@ -46,6 +44,7 @@ func (wq *WorkQueue) Start() {
 				// wtf? ignore
 			} else if err := f(wq.c, wq.ctx); err != nil {
 				// abort
+				log.Printf("Fatal: %v: %s", f, err)
 				wq.Cancel()
 				break
 			}
