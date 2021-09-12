@@ -6,10 +6,10 @@ import (
 	"net/http/cookiejar"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/json-iterator/go"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/justprintit/mmf"
+	"github.com/justprintit/mmf/api/client/json"
 )
 
 const (
@@ -34,8 +34,8 @@ func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
 		c.Credentials = cred
 	}
 
-	c.JSONMarshal = jsoniter.Marshal
-	c.JSONUnmarshal = jsoniter.Unmarshal
+	c.JSONMarshal = json.Marshal
+	c.JSONUnmarshal = json.Unmarshal
 
 	c.SetHostURL(DefaultHost)
 
