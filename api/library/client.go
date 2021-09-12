@@ -1,7 +1,6 @@
 package library
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -49,13 +48,8 @@ func NewWithOptions(options ...client.ClientOption) (*Client, error) {
 			return nil, err
 		}
 	}
-	c.Client.Init(mmf.Credentials{}, nil)
+	c.Init(mmf.Credentials{}, nil)
 	return c, nil
-}
-
-func (c *Client) GetLibrary(library string) (*resty.Response, error) {
-	path := fmt.Sprintf("/data-library/%s", library)
-	return c.J("/library?v=%s", library).Get(path)
 }
 
 type LibraryClientOption interface {
