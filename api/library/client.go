@@ -13,12 +13,14 @@ import (
 
 type Client struct {
 	client.Client
+	WorkQueue
 
 	DataDir string
 }
 
 func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
 	c.Client.Init(cred, rc)
+	c.WorkQueue.Init(c)
 	return c
 }
 
