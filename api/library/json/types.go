@@ -10,12 +10,12 @@ type Users struct {
 }
 
 type User struct {
-	Id       string
-	Username string
-	Name     string
+	Id       string         `json:"id"`
+	Username string         `json:"username"`
+	Name     string         `json:"name"`
 	Avatar   string         `json:"avatar_url"`
 	API      map[string]API `json:"apis,omitempty"`
-	Groups   Groups
+	Groups   Groups         `json:"groups,omitempty"`
 }
 
 type Groups struct {
@@ -24,13 +24,12 @@ type Groups struct {
 }
 
 type Group struct {
-	Id       GroupId
-	Name     string
-	Objects  int            `json:"total_count_objects,omitempty"`
-	Count    json.Number    `json:"total_count,omitempty"`
-	Items    GroupItems     `json:",omitempty"`
-	Children []Group        `json:"childrens,omitempty"`
-	API      map[string]API `json:"apis,omitempty"`
+	Id           GroupId        `json:"id"`
+	Name         string         `json:"name"`
+	API          map[string]API `json:"apis,omitempty"`
+	TotalObjects int            `json:"total_count_objects,omitempty"`
+	Children     []Group        `json:"childrens,omitempty"`
+	Objects
 }
 
 type GroupId struct {
@@ -64,9 +63,9 @@ func (w *GroupId) MarshalJSON() ([]byte, error) {
 	}
 }
 
-type GroupItems []Object
+type ObjectItems []Object
 
-func (w *GroupItems) UnmarshalJSON(data []byte) error {
+func (w *ObjectItems) UnmarshalJSON(data []byte) error {
 	var s []Object
 	var err error
 
@@ -87,7 +86,7 @@ func (w *GroupItems) UnmarshalJSON(data []byte) error {
 
 type Objects struct {
 	Count json.Number `json:"total_count,omitempty"`
-	Items []Object
+	Items ObjectItems `json:"items,omitempty"`
 }
 
 type Object struct {
@@ -161,13 +160,13 @@ type Image struct {
 
 type ImageFile struct {
 	URL    string
-	Width  *json.Number
-	Height *json.Number
+	Width  *int
+	Height *int
 }
 
 type Collection struct{}
 
 type API struct {
-	URL    string
+	URL    string `json:"url"`
 	Method string `json:"httpMethod"`
 }
