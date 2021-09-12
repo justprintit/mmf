@@ -6,6 +6,7 @@ import (
 	"net/http/cookiejar"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/json-iterator/go"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/justprintit/mmf"
@@ -33,10 +34,13 @@ func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
 		c.Credentials = cred
 	}
 
+	c.JSONMarshal = jsoniter.Marshal
+	c.JSONUnmarshal = jsoniter.Unmarshal
+
 	c.SetHostURL(DefaultHost)
 
 	// inject auto-login middleware
-	hc := c.Client.GetClient()
+	hc := c.GetClient()
 	return c.SetTransport(hc.Transport)
 }
 
