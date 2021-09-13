@@ -1,7 +1,11 @@
 package json
 
 import (
+	"log"
+
 	json "github.com/json-iterator/go"
+
+	"github.com/justprintit/mmf/api/library/types"
 )
 
 type ObjectItems []Object
@@ -66,4 +70,21 @@ type ObjectPrice struct {
 	Currency string
 	Symbol   string
 	Value    json.Number
+}
+
+func (w *Objects) Apply(d *types.Library) error {
+	if n := len(w.Items); n > 0 {
+		if v, err := w.Count.Int64(); err == nil {
+			if int64(n) != v {
+				log.Printf("Objects: expected:%v != actual:%v", v, n)
+			}
+		}
+
+		return ApplyObjects(d, nil, nil, w.Items...)
+	}
+	return nil
+}
+
+func ApplyObjects(d *types.Library, u *types.User, g *types.Group, objects ...Object) error {
+	return nil
 }

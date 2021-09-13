@@ -1,7 +1,13 @@
 package json
 
 import (
+	"log"
+	"sort"
+	"strings"
+
 	json "github.com/json-iterator/go"
+
+	"github.com/justprintit/mmf/api/library/types"
 )
 
 type Groups struct {
@@ -47,4 +53,59 @@ func (w *GroupId) MarshalJSON() ([]byte, error) {
 	} else {
 		return json.Marshal(w.id)
 	}
+}
+
+func (w *Group) Export() *types.Group {
+	if id, ok := w.Id.Int(); ok {
+		return &types.Group{
+			Id:   id,
+			Name: strings.TrimSpace(w.Name),
+		}
+	}
+	return nil
+}
+
+func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) error {
+	if g := w.Export(); g != nil {
+		if parent == nil {
+			if err := u.AddGroup(g); err != nil {
+				return err
+			}
+		} else if err := parent.AddSubgroup(g); err != nil {
+			return err
+		}
+
+		if n := len(w.Children); n > 0 {
+			subgroups := make([]*Group, 0, n)
+			for i := range w.Children {
+				p := &w.Children[i]
+				if _, ok := p.Id.Int(); ok {
+					subgroups = append(subgroups, p)
+				}
+			}
+
+			sort.Slice(subgroups[:], func(i, j int) bool {
+				a, _ := subgroups[i].Id.Int()
+				b, _ := subgroups[j].Id.Int()
+				return a < b
+			})
+
+			for _, p := range subgroups {
+				if err := p.Apply(d, u, g); err != nil {
+					return err
+				}
+			}
+		}
+
+		if n := len(w.Items); n > 0 {
+			if v, err := w.Count.Int64(); err == nil {
+				if int64(n) != v {
+					log.Printf("Group[%v].Items: expected:%v != actual:%v", g.Id, v, n)
+				}
+			}
+
+			return ApplyObjects(d, u, g, w.Items...)
+		}
+	}
+	return nil
 }
