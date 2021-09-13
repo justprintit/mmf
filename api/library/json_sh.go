@@ -46,7 +46,7 @@ func (c *Client) GetPledgesLibrary(ctx context.Context) (*json.Objects, error) {
 func (c *Client) GetPledgesLibraryPage(ctx context.Context, page int) (*json.Objects, error) {
 	out := &json.Objects{}
 
-	resp, err := c.GetLibraryPage(ctx, "campaings", page, out)
+	resp, err := c.GetLibraryPage(ctx, "campaigns", page, out)
 	if err != nil {
 		os.Stdout.Write(resp.Body())
 	}

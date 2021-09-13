@@ -31,7 +31,7 @@ for x in Shared:Users Purchases Pledges; do
 
 	case "$n" in
 	Pledges)
-		g="campaings"
+		g="campaigns"
 		;;
 	*)
 		g="$(echo "$n" | tr 'A-Z' 'a-z')"
