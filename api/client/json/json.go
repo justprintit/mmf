@@ -15,9 +15,6 @@ type (
 )
 
 var ConfigDefault = json.Config{
-	// pretty print
-	IndentionStep: 2,
-	SortMapKeys:   true,
 	// strict
 	DisallowUnknownFields:         true,
 	CaseSensitive:                 true,
