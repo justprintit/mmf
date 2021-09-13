@@ -22,11 +22,15 @@ func (w *User) Export() *types.User {
 }
 
 func (w *Users) Apply(d *types.Library) error {
-	if n := len(w.User); n != w.Count {
-		log.Printf("Users: expected:%v != actual:%v", w.Count, n)
+	if n := len(w.Items); n > 0 {
+		if v, err := w.Count.Int64(); err == nil {
+			if int64(n) != v {
+				log.Printf("Users: expected:%v != actual:%v", v, n)
+			}
+		}
 	}
 
-	for i, v := range w.User {
+	for i, v := range w.Items {
 		u := v.Export()
 
 		log.Printf("User.%v: %s (%s)", i, u.Name, u.Username)

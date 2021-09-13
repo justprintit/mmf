@@ -5,8 +5,8 @@ import (
 )
 
 type Users struct {
-	Count int    `json:"total_count"`
-	User  []User `json:"items"`
+	Count json.Number `json:"total_count"`
+	Items []User      `json:"items"`
 }
 
 type User struct {

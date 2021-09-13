@@ -63,13 +63,13 @@ func (c *Client) RefreshSharedLibrary(ctx context.Context) error {
 
 		if p == nil {
 			//  first page
-			p = c.Pages(len(d.User), d.Count)
+			p = c.PagesN(len(d.Items), d.Count)
 		}
 
 		// process in parallel
 		offset := p.Size * (page - 1)
 		c.Spawn(func(c *Client, ctx context.Context) error {
-			return c.refreshSharedLibrary(ctx, offset, d.User...)
+			return c.refreshSharedLibrary(ctx, offset, d.Items...)
 		})
 
 		// next page
