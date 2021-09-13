@@ -8,6 +8,7 @@ import (
 
 	"github.com/justprintit/mmf"
 	"github.com/justprintit/mmf/api/client"
+	"github.com/justprintit/mmf/api/library/types"
 )
 
 type Client struct {
@@ -15,6 +16,7 @@ type Client struct {
 	WorkQueue
 
 	DataDir string
+	library types.Library
 }
 
 func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
