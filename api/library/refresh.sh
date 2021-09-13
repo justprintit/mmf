@@ -24,7 +24,8 @@ func (c *Client) RefreshLibraries(ctx context.Context) error {
 		return err
 	}
 EOT
-for x in "Shared with me" Purchases Pledges; do
+
+for x in "Shared with me" Purchases Pledges Tribes; do
 
 	msg=$(echo "$x" | tr A-Z a-z)
 	key="${x%% *}"
@@ -41,7 +42,13 @@ cat <<EOT
 }
 EOT
 
-for n in Shared Purchases Pledges; do
+for x in Shared Purchases Pledges Tribes:i; do
+	n=${x%%:*}
+	if [ "$n" != "$x" ]; then
+		pages=Pages
+	else
+		pages=PagesN
+	fi
 
 cat <<EOT
 
@@ -60,7 +67,7 @@ func (c *Client) Refresh${n}Library(ctx context.Context) error {
 
 		if p == nil {
 			// first page
-			p = c.PagesN(len(d.Items), d.Count)
+			p = c.$pages(len(d.Items), d.Count)
 		}
 
 		// process in parallel

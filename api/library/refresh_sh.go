@@ -29,6 +29,11 @@ func (c *Client) RefreshLibraries(ctx context.Context) error {
 	c.Add(func(c *Client, ctx context.Context) error {
 		return c.RefreshPledgesLibrary(ctx)
 	})
+
+	// tribes
+	c.Add(func(c *Client, ctx context.Context) error {
+		return c.RefreshTribesLibrary(ctx)
+	})
 	return nil
 }
 
@@ -116,6 +121,37 @@ func (c *Client) RefreshPledgesLibrary(ctx context.Context) error {
 		offset := p.Size * (page - 1)
 		c.Spawn(func(c *Client, ctx context.Context) error {
 			return c.refreshPledgesLibrary(ctx, offset, d.Items...)
+		})
+
+		// next page
+		page, _, ok = p.Next(page)
+	}
+
+	return nil
+}
+
+func (c *Client) RefreshTribesLibrary(ctx context.Context) error {
+	var p *Pagination
+
+	page := 1
+	ok := true
+
+	for ok {
+		// get json items
+		d, err := c.GetTribesLibraryPage(ctx, page)
+		if err != nil {
+			return err
+		}
+
+		if p == nil {
+			// first page
+			p = c.Pages(len(d.Items), d.Count)
+		}
+
+		// process in parallel
+		offset := p.Size * (page - 1)
+		c.Spawn(func(c *Client, ctx context.Context) error {
+			return c.refreshTribesLibrary(ctx, offset, d.Items...)
 		})
 
 		// next page

@@ -44,3 +44,13 @@ func (c *Client) refreshPledgesLibrary(ctx context.Context, offset int, objects 
 	}
 	return nil
 }
+
+func (c *Client) refreshTribesLibrary(ctx context.Context, offset int, tribes ...json.Tribe) error {
+	i := offset
+	for _, u := range tribes {
+		i++
+
+		log.Printf("Tribe.%v: %s (%v)", i, u.Name, u.Id)
+	}
+	return nil
+}
