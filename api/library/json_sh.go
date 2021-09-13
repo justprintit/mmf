@@ -52,3 +52,17 @@ func (c *Client) GetPledgesLibraryPage(ctx context.Context, page int) (*json.Obj
 	}
 	return out, err
 }
+
+func (c *Client) GetTribesLibrary(ctx context.Context) (*json.Tribes, error) {
+	return c.GetTribesLibraryPage(ctx, 0)
+}
+
+func (c *Client) GetTribesLibraryPage(ctx context.Context, page int) (*json.Tribes, error) {
+	out := &json.Tribes{}
+
+	resp, err := c.GetLibraryPage(ctx, "tribes", page, out)
+	if err != nil {
+		os.Stdout.Write(resp.Body())
+	}
+	return out, err
+}
