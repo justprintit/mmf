@@ -9,7 +9,16 @@ import (
 
 // Reload persistent Library data
 func (c *Client) Reload() error {
-	return nil
+	l, err := c.store.Load()
+	if err == nil {
+		c.library = l
+	}
+	return err
+}
+
+// Stores library data persistently
+func (c *Client) Commit() error {
+	return c.store.Store(c.library)
 }
 
 func (c *Client) refreshSharedLibrary(ctx context.Context, offset int, users ...json.User) error {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/justprintit/mmf"
 	"github.com/justprintit/mmf/api/client"
+	"github.com/justprintit/mmf/api/library/store"
 	"github.com/justprintit/mmf/api/library/types"
 )
 
@@ -15,13 +16,21 @@ type Client struct {
 	client.Client
 	WorkQueue
 
-	DataDir string
-	library types.Library
+	store   types.Store
+	library *types.Library
 }
 
 func (c *Client) Init(cred mmf.Credentials, rc *resty.Client) *Client {
 	c.Client.Init(cred, rc)
 	c.WorkQueue.Init(c)
+
+	if c.store == nil {
+		c.store = &store.NOPStore{}
+	}
+
+	if c.library == nil {
+		c.library = &types.Library{}
+	}
 	return c
 }
 
@@ -83,11 +92,25 @@ func WithCookieJar(jar http.CookieJar) client.ClientOption {
 }
 
 func WithDataDir(datadir string) client.ClientOption {
+	if datadir == "" {
+		datadir = "."
+	}
+
 	return LibraryClientOptionFunc(func(c *Client) error {
-		if datadir == "" {
-			datadir = "."
+		c.store = &store.YAMLStore{
+			Basedir: datadir,
 		}
-		c.DataDir = datadir
+		return nil
+	})
+}
+
+func WithDataStore(ds types.Store) client.ClientOption {
+	if ds == nil {
+		ds = &store.NOPStore{}
+	}
+
+	return LibraryClientOptionFunc(func(c *Client) error {
+		c.store = ds
 		return nil
 	})
 }

@@ -62,6 +62,9 @@ func (m *Sync) Save() {
 	if len(cfg.Cookies) > 0 {
 		m.Cookies.Save()
 	}
+	if err := m.Client.Commit(); err != nil {
+		log.Println("Store", err)
+	}
 	log.Println("Done.")
 }
 
