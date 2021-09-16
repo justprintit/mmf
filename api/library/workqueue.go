@@ -18,7 +18,7 @@ type Queue struct {
 	Max   int32
 }
 
-func (p *Queue) MayAdd() bool {
+func (p *Queue) Add() bool {
 	if n0 := p.Count; n0 < p.Max {
 		// try
 		if atomic.CompareAndSwapInt32(&p.Count, n0, n0+1) {
@@ -27,11 +27,6 @@ func (p *Queue) MayAdd() bool {
 		}
 	}
 	return false
-}
-
-func (p *Queue) Add() {
-	atomic.AddInt32(&p.Count, 1)
-	p.wg.Add(1)
 }
 
 func (p *Queue) Done() {
@@ -54,13 +49,8 @@ type WorkQueue struct {
 }
 
 func (wq *WorkQueue) Init(c *Client) {
-	ctx, cancel := context.WithCancel(context.Background())
-
 	// client
 	wq.c = c
-	// cancel
-	wq.ctx = ctx
-	wq.cancel = cancel
 	// waitgroup
 	wq.q.wg = &wq.wg
 	wq.d.wg = &wq.wg
@@ -76,6 +66,11 @@ func (wq *WorkQueue) Start(n int32) {
 	wq.done = make(chan error)
 	wq.q.Max = 1 // WorkJobs run sequentially
 	wq.d.Max = n // DownloadJobs in parallel
+
+	// cancel
+	ctx, cancel := context.WithCancel(context.Background())
+	wq.ctx = ctx
+	wq.cancel = cancel
 
 	go func() {
 		// launch workers
@@ -93,7 +88,7 @@ func (wq *WorkQueue) Poke() {
 
 	// WorkJobs
 	if !wq.q.Empty() {
-		if wq.q.MayAdd() {
+		if wq.q.Add() {
 			go func() {
 				defer wq.q.Done()
 				wq.runQueueWorker()
@@ -103,7 +98,7 @@ func (wq *WorkQueue) Poke() {
 
 	// DownloadJob
 	if !wq.d.Empty() {
-		if wq.d.MayAdd() {
+		if wq.d.Add() {
 			go func() {
 				defer wq.d.Done()
 				wq.runDownloadWorker()
