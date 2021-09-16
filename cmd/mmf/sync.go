@@ -72,6 +72,8 @@ var syncCmd = &cobra.Command{
 		return cfg.Setup()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		const downloaders = 3
+
 		// cookiejar
 		jar, err := cookiejar.New(&cookiejar.Options{
 			Filename:         cfg.Cookies,
@@ -98,7 +100,7 @@ var syncCmd = &cobra.Command{
 
 		log.Println("Starting...")
 		defer sync.Save() // Save cookies
-		sync.Start()
+		sync.Start(downloaders)
 
 		// and wait
 		for {
