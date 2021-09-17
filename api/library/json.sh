@@ -6,7 +6,11 @@ F="${0%.sh}_sh.go"
 trap "rm -f '$F~'" EXIT
 exec > "$F~"
 
-LIBRARIES="Shared:Users Purchases:Objects Pledges:Objects Tribes"
+LIBRARIES=
+LIBRARIES="${LIBRARIES:+$LIBRARIES }Shared:Users"
+LIBRARIES="${LIBRARIES:+$LIBRARIES }Purchases:Objects"
+LIBRARIES="${LIBRARIES:+$LIBRARIES }Pledges:Objects"
+LIBRARIES="${LIBRARIES:+$LIBRARIES }Tribes"
 
 # Prelude
 #
