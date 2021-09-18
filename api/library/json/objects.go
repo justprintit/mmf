@@ -35,28 +35,28 @@ type Objects struct {
 }
 
 type Object struct {
-	Id                 int
-	Name               string
-	Description        string         `json:",omitempty"`
-	Type               string         `json:",omitempty"`
+	Id                 int            `json:"id,omitempty"`
+	Name               string         `json:"name,omitempty"`
+	Description        string         `json:"description,omitempty"`
+	Type               string         `json:"type,omitempty"`
 	ObjType            string         `json:"document_name_s,omitempty"`
 	Private            bool           `json:"is_private,omitempty"`
-	Visits             int            `json:",omitempty"`
-	URL                string         `json:",omitempty"`
+	Visits             int            `json:"visits,omitempty"`
+	URL                string         `json:"url,omitempty"`
 	ShowURL            string         `json:"show_url,omitempty"`
 	AbsoluteURL        string         `json:"absolute_url,omitempty"`
 	Image              string         `json:"obj_img,omitempty"`
-	Images             Images         `json:",omitempty"`
-	Wide               bool           `json:",omitempty"`
+	Images             Images         `json:"images,omitempty"`
+	Wide               bool           `json:"wide,omitempty"`
 	Purchased          bool           `json:"is_purchased,omitempty"`
-	Price              ObjectPrice    `json:",omitempty"`
+	Price              ObjectPrice    `json:"price,omitempty"`
 	FileMode           int            `json:"file_mode,omitempty"`
 	Permissions        int            `json:"permissions,omitempty"`
 	DownloadURL        string         `json:"download_url,omitempty"`
 	ArchiveDownloadURL string         `json:"archive_download_url,omitempty"`
-	Archives           []Archive      `json:",omitempty"`
-	Files              Files          `json:",omitempty"`
-	Pledges            Groups         `json:",omitempty"`
+	Archives           []Archive      `json:"archives,omitempty"`
+	Files              Files          `json:"files,omitempty"`
+	Pledges            Groups         `json:"pledges,omitempty"`
 	User               string         `json:"username,omitempty"`
 	UserName           string         `json:"user_name,omitempty"`
 	UserURL            string         `json:"user_url,omitempty"`
@@ -67,9 +67,9 @@ type Object struct {
 }
 
 type ObjectPrice struct {
-	Currency string
-	Symbol   string
-	Value    json.Number
+	Currency string      `json:"currency"`
+	Symbol   string      `json:"symbol"`
+	Value    json.Number `json:"value"`
 }
 
 func (w *Objects) Apply(d *types.Library) error {
