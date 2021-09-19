@@ -1,6 +1,7 @@
 package yaml
 
 import (
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -55,4 +56,9 @@ func (store *Store) ExportSlice(data *types.Library) yaml.MapSlice {
 	}
 
 	return slice
+}
+
+// Write all data into one file
+func (store *Store) WriteTo(data *types.Library, out io.Writer) (int64, error) {
+	return WriteTo(store.ExportSlice(data), out)
 }
