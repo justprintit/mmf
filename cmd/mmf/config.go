@@ -9,6 +9,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/spf13/cobra"
+
 	"go.sancus.dev/config/flags"
 	"go.sancus.dev/config/hcl"
 
@@ -77,4 +79,18 @@ func (c *Config) Setup() error {
 	c.Cookies = filepath.Clean(c.Cookies)
 
 	return nil
+}
+
+var configCmd = &cobra.Command{
+	Use:   "config",
+	Short: "prints current config",
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		_, err := cfg.WriteTo(os.Stdout)
+		return err
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(configCmd)
 }
