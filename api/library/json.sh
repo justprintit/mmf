@@ -148,6 +148,18 @@ func refresh${n}LibraryCallback(c *Client, ctx context.Context, resp *resty.Resp
 EOT
 done
 
+if [ -z "$LIBRARIES" ]; then
+	cat <<EOT
+
+func init() {
+	// avoid "imported and not used" errors
+	_ = os.Open
+	_ = resty.New
+	_ = json.Write
+}
+EOT
+fi
+
 if ! diff -u "$F" "$F~" >&2; then
 	mv "$F~" "$F"
 fi
