@@ -66,12 +66,18 @@ func (w *Group) Export() *types.Group {
 }
 
 func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) error {
+	const merge = true
+
 	if g := w.Export(); g != nil {
+		var err error
+
 		if parent == nil {
-			if err := u.AddGroup(g); err != nil {
-				return err
-			}
-		} else if err := parent.AddSubgroup(g); err != nil {
+			g, err = u.AddGroup(g, merge)
+		} else {
+			g, err = parent.AddSubgroup(g, merge)
+		}
+
+		if err != nil {
 			return err
 		}
 

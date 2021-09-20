@@ -2,6 +2,7 @@ package types
 
 import (
 	"net/url"
+	"strings"
 
 	"go.sancus.dev/core/errors"
 )
@@ -19,7 +20,11 @@ func (u *User) GetSharedGroupsURL() string {
 	return "/data-library/shared/" + url.PathEscape(u.Username)
 }
 
-func (w *Library) AddUser(u *User) error {
+func (w *Library) AddUser(u *User, merge bool) (*User, error) {
+	var check errors.ErrorStack
+	var u0 *User
+	var ok bool
+
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -28,19 +33,58 @@ func (w *Library) AddUser(u *User) error {
 	}
 
 	if user := u.Username; len(user) == 0 {
-		return errors.ErrMissingField("Username")
-	} else if _, ok := w.User[user]; ok {
+		check.MissingField("Username")
+	} else if u0, ok = w.User[user]; ok {
 		// exists
-		return errors.New("%s[%q]: Already exists", "User", user)
-	} else if err := w.checkNewGroups(u.Groups...); err != nil {
-		return errors.Wrap(err, "%s[%q]: Group already exists", "User", user)
+		if !merge {
+			err := errors.New("%s[%q]: Already exists", "User", user)
+
+			check.AppendError(err)
+		} else {
+			// merge
+			if len(u0.Name) == 0 {
+				u0.Name = strings.TrimSpace(u.Name)
+			}
+
+			if len(u0.Avatar) == 0 {
+				u0.Avatar = u.Avatar
+			}
+
+			// merge groups
+			for _, g := range u.Groups {
+				if _, err := u0.AddGroup(g, true); err != nil {
+					check.AppendWrapped(err, "%s[%q]", "User", user)
+				}
+			}
+		}
 	} else {
 		// new
-		u.root = w
-		w.User[user] = u
-		for _, g := range u.Groups {
-			w.registerGroup(g)
+		name := strings.TrimSpace(u.Name)
+		if len(name) == 0 {
+			name = u.Username
 		}
-		return nil
+
+		u0 = &User{
+			Username: u.Username,
+			Name:     name,
+			Avatar:   u.Avatar,
+		}
+
+		// register
+		u0.root = w
+		w.User[user] = u0
+
+		// add groups
+		for _, g := range u.Groups {
+			if _, err := u0.AddGroup(g, false); err != nil {
+				check.AppendWrapped(err, "%s[%q]", "User", user)
+			}
+		}
+	}
+
+	if !check.Ok() {
+		return nil, &check
+	} else {
+		return u0, nil
 	}
 }

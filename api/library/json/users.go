@@ -38,6 +38,8 @@ func (w *User) Export() *types.User {
 }
 
 func (w *Users) Apply(d *types.Library) error {
+	const merge = true
+
 	if n := len(w.Items); n > 0 {
 		if v, err := w.Count.Int64(); err == nil {
 			if int64(n) != v {
@@ -47,12 +49,15 @@ func (w *Users) Apply(d *types.Library) error {
 	}
 
 	for i, v := range w.Items {
+		var err error
 		u := v.Export()
 
 		log.Printf("User.%v: %s (%s)", i, u.Name, u.Username)
 
-		if err := d.AddUser(u); err != nil {
+		u, err = d.AddUser(u, merge)
+		if err != nil {
 			log.Printf("User.%v: Failed to add User: %s", i, err)
+			continue
 		}
 
 		// Groups
