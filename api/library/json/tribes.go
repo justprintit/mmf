@@ -9,6 +9,7 @@ type Tribe struct {
 	Id         int         `json:"id"`
 	Name       string      `json:"name"`
 	UserAvatar string      `json:"user_avatar"`
+	URL        string      `json:"url"`
 	Groups     TribeGroups `json:"groups,omitempty"`
 }
 
