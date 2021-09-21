@@ -5,8 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	json "github.com/json-iterator/go"
+	"go.sancus.dev/core/errors"
 
+	"github.com/justprintit/mmf/api/client/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
 
@@ -24,22 +25,74 @@ type User struct {
 	Groups   Groups         `json:"groups,omitempty"`
 }
 
-func (w *User) Export() *types.User {
+func (w *User) Export(groups bool) *types.User {
 	name := strings.TrimSpace(w.Name)
 	if len(name) == 0 {
 		name = w.Username
 	}
 
-	return &types.User{
+	u := &types.User{
 		Username: w.Username,
 		Name:     name,
 		Avatar:   w.Avatar,
 	}
+
+	if groups {
+		const recursive = true
+
+		u.Groups = w.ExportGroups(recursive)
+	}
+
+	return u
+}
+
+func (w *User) ExportGroups(recursive bool) []*types.Group {
+	n := len(w.Groups.Group)
+
+	if k := w.Groups.Count; k != n {
+		log.Printf("User.Groups: expected:%v != actual:%v", k, n)
+	}
+
+	// export
+	out := make([]*types.Group, 0, n)
+	for i := range w.Groups.Group {
+		p := &w.Groups.Group[i]
+		if _, ok := p.Id.Int(); ok {
+			// skip groups with string id
+			if g := p.Export(recursive); g != nil {
+				out = append(out, g)
+			}
+		}
+	}
+
+	// sort
+	sort.Slice(out[:], func(i, j int) bool {
+		a := out[i].Id
+		b := out[i].Id
+		return a < b
+	})
+
+	return out
+}
+
+func (w *User) Apply(d *types.Library) error {
+	const merge = true
+	const groups = true
+
+	if u := w.Export(groups); u != nil {
+		_, err := d.AddUser(u, merge)
+		if err != nil {
+			return errors.Wrap(err, "AddUser")
+		}
+	}
+
+	return nil
 }
 
 func (w *Users) Apply(d *types.Library) error {
-	const merge = true
+	var check errors.ErrorStack
 
+	// expected quantity
 	if n := len(w.Items); n > 0 {
 		if v, err := w.Count.Int64(); err == nil {
 			if int64(n) != v {
@@ -48,43 +101,15 @@ func (w *Users) Apply(d *types.Library) error {
 		}
 	}
 
+	// apply them all to the library
 	for i, v := range w.Items {
-		var err error
-		u := v.Export()
-
-		log.Printf("User.%v: %s (%s)", i, u.Name, u.Username)
-
-		u, err = d.AddUser(u, merge)
-		if err != nil {
-			log.Printf("User.%v: Failed to add User: %s", i, err)
-			continue
-		}
-
-		// Groups
-		if n := len(v.Groups.Group); n != v.Groups.Count {
-			log.Printf("User.%v: Groups: expected:%v != actual:%v", i, v.Groups.Count, n)
-		}
-
-		groups := make([]*Group, 0, len(v.Groups.Group))
-		for i := range v.Groups.Group {
-			p := &v.Groups.Group[i]
-			if _, ok := p.Id.Int(); ok {
-				groups = append(groups, p)
-			}
-		}
-		sort.Slice(groups[:], func(i, j int) bool {
-			a, _ := groups[i].Id.Int()
-			b, _ := groups[j].Id.Int()
-			return a < b
-		})
-
-		for _, p := range groups {
-			if err := p.Apply(d, u, nil); err != nil {
-				id, _ := p.Id.Int()
-				log.Printf("User.%v: Failed to add Group %q (%v): %s", i, p.Name, id, err)
-			}
+		if err := v.Apply(d); err != nil {
+			check.AppendWrapped(err, "User.%v: %q", i, v.Username)
 		}
 	}
 
+	if !check.Ok() {
+		return &check
+	}
 	return nil
 }

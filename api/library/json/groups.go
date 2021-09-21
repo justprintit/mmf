@@ -5,8 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	json "github.com/json-iterator/go"
-
+	"github.com/justprintit/mmf/api/client/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
 
@@ -55,12 +54,21 @@ func (w *GroupId) MarshalJSON() ([]byte, error) {
 	}
 }
 
-func (w *Group) Export() *types.Group {
+func (w *Group) Export(recursive bool) *types.Group {
 	if id, ok := w.Id.Int(); ok {
-		return &types.Group{
+		g := &types.Group{
 			Id:   id,
 			Name: strings.TrimSpace(w.Name),
 		}
+
+		if recursive {
+			for _, v := range w.Children {
+				cg := v.Export(recursive)
+				g.Subgroups = append(g.Subgroups, cg)
+			}
+		}
+
+		return g
 	}
 	return nil
 }
@@ -68,7 +76,7 @@ func (w *Group) Export() *types.Group {
 func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) error {
 	const merge = true
 
-	if g := w.Export(); g != nil {
+	if g := w.Export(false); g != nil {
 		var err error
 
 		if parent == nil {
@@ -81,7 +89,9 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 			return err
 		}
 
+		// subgroups
 		if n := len(w.Children); n > 0 {
+			// sorted
 			subgroups := make([]*Group, 0, n)
 			for i := range w.Children {
 				p := &w.Children[i]
@@ -103,6 +113,7 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 			}
 		}
 
+		// objects
 		if n := len(w.Items); n > 0 {
 			if v, err := w.Count.Int64(); err == nil {
 				if int64(n) != v {
@@ -113,5 +124,6 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 			return ApplyObjects(d, u, g, w.Items...)
 		}
 	}
+
 	return nil
 }

@@ -32,6 +32,9 @@ func (c *Client) refreshSharedLibrary(ctx context.Context, offset int, users ...
 			log.Printf("User.%v: %s", i, u.Id)
 		}
 
+		if err := u.Apply(c.library); err != nil {
+			log.Println(err)
+		}
 	}
 	return nil
 }
