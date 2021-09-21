@@ -65,8 +65,11 @@ func newGroup(u *User, parent *Group, id int, name string) *Group {
 	}
 
 	w.registerGroup(g)
-	u.Groups = append(u.Groups, g)
-
+	if parent == nil {
+		u.Groups = append(u.Groups, g)
+	} else {
+		parent.Subgroups = append(parent.Subgroups, g)
+	}
 	return g
 }
 
