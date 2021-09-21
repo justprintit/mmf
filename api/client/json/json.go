@@ -47,3 +47,7 @@ func Write(data interface{}, indent string, out io.Writer) error {
 	adapter.SetIndent("", indent)
 	return adapter.Encode(data)
 }
+
+func WriteTo(out io.Writer, data interface{}) error {
+	return Write(data, "  ", out)
+}
