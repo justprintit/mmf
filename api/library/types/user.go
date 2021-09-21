@@ -52,7 +52,7 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 
 			// merge groups
 			for _, g := range u.Groups {
-				if _, err := u0.AddGroup(g, true); err != nil {
+				if _, err := u0.addGroup(g, true); err != nil {
 					check.AppendWrapped(err, "%s[%q]", "User", user)
 				}
 			}
@@ -76,7 +76,7 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 
 		// add groups
 		for _, g := range u.Groups {
-			if _, err := u0.AddGroup(g, false); err != nil {
+			if _, err := u0.addGroup(g, false); err != nil {
 				check.AppendWrapped(err, "%s[%q]", "User", user)
 			}
 		}

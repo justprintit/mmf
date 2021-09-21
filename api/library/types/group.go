@@ -43,6 +43,10 @@ func (u *User) AddGroup(g *Group, merge bool) (*Group, error) {
 	return addGroup(u, nil, g, merge)
 }
 
+func (u *User) addGroup(g *Group, merge bool) (*Group, error) {
+	return addGroup(u, nil, g, merge)
+}
+
 func newGroup(u *User, parent *Group, id int, name string) *Group {
 	w := u.entry.Library()
 
