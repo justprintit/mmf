@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 
@@ -67,34 +66,6 @@ func NewWithOptions(options ...ClientOption) (*Client, error) {
 	}
 	c.Init(mmf.Credentials{}, nil)
 	return c, nil
-}
-
-func (c *Client) R(referer string, args ...interface{}) *resty.Request {
-	req := c.Client.R()
-
-	// TraceInfo
-	if c.TraceEnabled {
-		req.EnableTrace()
-	}
-
-	// Referer
-	if len(args) > 0 {
-		referer = fmt.Sprintf(referer, args...)
-	}
-	if len(referer) == 0 {
-		referer = "/"
-	} else if referer[0] != '/' {
-		referer = "/" + referer
-	}
-	req.SetHeader("Referer", c.HostURL+referer)
-
-	return req
-}
-
-func (c *Client) J(referer string, args ...interface{}) *resty.Request {
-	req := c.R(referer, args...)
-	req.SetHeader("Accept", "application/json")
-	return req
 }
 
 type ClientOption interface {

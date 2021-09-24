@@ -5,42 +5,48 @@ import (
 	"os"
 
 	"github.com/go-resty/resty/v2"
+
+	"github.com/justprintit/mmf/api/client"
 )
 
 type ResponseHandler func(c *Client, ctx context.Context, resp *resty.Response) error
 
 type DownloadJob struct {
-	Referer string
-	Path    string
-	Result  interface{}
-	Handler ResponseHandler
+	client.RequestOptions
+
+	h ResponseHandler
 }
 
 func (j *DownloadJob) Do(c *Client, ctx context.Context) error {
-	req := c.R(j.Referer)
-	req.SetContext(ctx)
-	if j.Result != nil {
-		req.SetHeader("Accept", "application/json")
-		req.SetResult(j.Result)
+
+	req := j.New(&c.Client, ctx)
+
+	if req.Method == "HEAD" {
+		req.SetDoNotParseResponse(true)
 	}
-	resp, err := req.Get(j.Path)
+
+	resp, err := req.Get()
 	if err != nil {
 		os.Stdout.Write(resp.Body())
 		return err
 	}
 
-	return j.Handler(c, ctx, resp)
+	return j.h(c, ctx, resp)
 }
 
-func (wq *WorkQueue) Download(referer, path string, out interface{}, fn ResponseHandler) {
-	if len(path) > 0 {
+func (wq *WorkQueue) Download(opt client.RequestOptions, fn ResponseHandler) {
+	if len(opt.Path) > 0 {
 		req := &DownloadJob{
-			Referer: referer,
-			Path:    path,
-			Result:  out,
-			Handler: fn,
+			RequestOptions: opt,
+			h:              fn,
 		}
 
+		wq.Request(req)
+	}
+}
+
+func (wq *WorkQueue) Request(req *DownloadJob) {
+	if req != nil {
 		wq.d.Push(req)
 		wq.Poke()
 	}
