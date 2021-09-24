@@ -20,6 +20,27 @@ func (u *User) GetSharedGroupsURL() string {
 	return "/data-library/shared/" + url.PathEscape(u.Username)
 }
 
+func (u *User) updateName(s string) {
+	if len(u.Name) == 0 {
+		u.updateString("Name", &u.Name, s)
+	}
+}
+
+func (u *User) updateAvatar(s string) {
+	if s = strings.TrimSpace(s); len(s) > 0 {
+		u.updateString("Avatar", &u.Avatar, s)
+	}
+}
+
+func (u *User) updateString(field string, v *string, s string) {
+	before := *v
+	after := strings.TrimSpace(s)
+	if before != after {
+		*v = after
+		u.entry.OnUserUpdate(u, field, before, after)
+	}
+}
+
 func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 	var check errors.ErrorStack
 	var u0 *User
@@ -42,13 +63,8 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 			check.AppendError(err)
 		} else {
 			// merge
-			if len(u0.Name) == 0 {
-				u0.Name = strings.TrimSpace(u.Name)
-			}
-
-			if len(u0.Avatar) == 0 {
-				u0.Avatar = u.Avatar
-			}
+			u0.updateName(u.Name)
+			u0.updateAvatar(u.Avatar)
 
 			// merge groups
 			for _, g := range u.Groups {
@@ -71,8 +87,10 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 		}
 
 		// register
-		u0.root = w
+		u0.Library = w
 		w.User[user] = u0
+
+		w.OnNewUser(u0)
 
 		// add groups
 		for _, g := range u.Groups {
@@ -83,8 +101,10 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 	}
 
 	if !check.Ok() {
-		return nil, &check
-	} else {
-		return u0, nil
+		err := &check
+		w.OnError(err)
+		return nil, err
 	}
+
+	return u0, nil
 }

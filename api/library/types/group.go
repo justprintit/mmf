@@ -25,20 +25,31 @@ func (g *Group) GetObjectsURL() string {
 	return fmt.Sprintf("/data-library/group/%v", g.Id)
 }
 
-func (g *Group) AddSubgroup(sg *Group, merge bool) (*Group, error) {
-	w := g.entry.Library()
+func (g *Group) updateName(s string) {
+	if len(g.Name) == 0 {
+		g.updateString("Name", &g.Name, s)
+	}
+}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+func (g *Group) updateString(field string, v *string, s string) {
+	before := *v
+	after := strings.TrimSpace(s)
+	if before != after {
+		*v = after
+		g.entry.OnGroupUpdate(g, field, before, after)
+	}
+}
+
+func (g *Group) AddSubgroup(sg *Group, merge bool) (*Group, error) {
+	g.entry.Lock()
+	defer g.entry.Unlock()
 
 	return addGroup(nil, g, sg, merge)
 }
 
 func (u *User) AddGroup(g *Group, merge bool) (*Group, error) {
-	w := u.entry.Library()
-
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	u.entry.Lock()
+	defer u.entry.Unlock()
 
 	return addGroup(u, nil, g, merge)
 }
@@ -48,7 +59,7 @@ func (u *User) addGroup(g *Group, merge bool) (*Group, error) {
 }
 
 func newGroup(u *User, parent *Group, id int, name string) *Group {
-	w := u.entry.Library()
+	w := u.entry.Library
 
 	// sanitize name
 	name = strings.TrimSpace(name)
@@ -70,6 +81,7 @@ func newGroup(u *User, parent *Group, id int, name string) *Group {
 	} else {
 		parent.Subgroups = append(parent.Subgroups, g)
 	}
+	w.OnNewGroup(g)
 	return g
 }
 
@@ -88,7 +100,7 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 		}
 	}
 
-	w := u.entry.Library()
+	w := u.entry.Library
 
 	if u0, ok := w.User[u.Username]; ok {
 		// just in case it's a dummy
@@ -128,9 +140,7 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 			check.AppendError(err)
 		} else {
 			// merge
-			if len(g0.Name) == 0 {
-				g0.Name = strings.TrimSpace(g.Name)
-			}
+			g0.updateName(g.Name)
 
 			// merge subgroups
 			for _, sg := range g.Subgroups {
@@ -153,19 +163,12 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 	}
 
 	if !check.Ok() {
-		return nil, &check
-	} else {
-		return g0, nil
+		err := &check
+		w.OnUserError(u, err)
+		return nil, err
 	}
-}
 
-func (w *Library) checkNewGroups(groups ...*Group) error {
-	for _, g := range groups {
-		if _, ok := w.group[g.Id]; ok {
-			return errors.New("%s[%v]: Already exists", "Group", g.Id)
-		}
-	}
-	return nil
+	return g0, nil
 }
 
 func (w *Library) registerGroup(g *Group) {
@@ -173,6 +176,6 @@ func (w *Library) registerGroup(g *Group) {
 		w.group = make(map[int]*Group, 1)
 	}
 
-	g.root = w
+	g.Library = w
 	w.group[g.Id] = g
 }
