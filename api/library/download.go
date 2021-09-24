@@ -45,6 +45,19 @@ func (wq *WorkQueue) Download(opt client.RequestOptions, fn ResponseHandler) {
 	}
 }
 
+func (wq *WorkQueue) Peek(opt client.RequestOptions, fn ResponseHandler) {
+	if len(opt.Path) > 0 {
+		opt.Method = resty.MethodHead
+
+		req := &DownloadJob{
+			RequestOptions: opt,
+			h:              fn,
+		}
+
+		wq.Request(req)
+	}
+}
+
 func (wq *WorkQueue) Request(req *DownloadJob) {
 	if req != nil {
 		wq.d.Push(req)
