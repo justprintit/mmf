@@ -1,16 +1,11 @@
 package types
 
 import (
-	"log"
+	"strings"
 )
 
-func UpdateString(label string, v *string, next string) error {
-	if prev := *v; prev != next {
-		if len(prev) > 0 {
-			log.Printf("- %s: %q", label, prev)
-		}
-		log.Printf("+ %s: %q", label, next)
-		*v = next
-	}
-	return nil
+func sanitize(s string) string {
+	s = strings.ReplaceAll(s, "/", "-")
+	s = strings.ReplaceAll(s, "\\", "-")
+	return s
 }

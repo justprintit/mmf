@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"go.sancus.dev/core/errors"
@@ -23,6 +24,35 @@ type Object struct{}
 
 func (g *Group) GetObjectsURL() string {
 	return fmt.Sprintf("/data-library/group/%v", g.Id)
+}
+
+func (g *Group) SanitizedName() string {
+	return sanitize(g.Name)
+}
+
+func (g *Group) Path() string {
+	var s = []string{g.SanitizedName()}
+
+	for {
+		var name string
+
+		if g == nil {
+			break
+		} else if p := g.parent; p != nil {
+			g = p
+			name = g.SanitizedName()
+		} else {
+			u := g.user
+			g = nil
+			name = u.SanitizedName()
+		}
+
+		t := make([]string, 1, len(s)+1)
+		t[0] = name
+		s = append(t, s...)
+	}
+
+	return path.Join(s...)
 }
 
 func (g *Group) updateName(s string) {

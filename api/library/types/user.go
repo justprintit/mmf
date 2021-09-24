@@ -20,6 +20,14 @@ func (u *User) GetSharedGroupsURL() string {
 	return "/data-library/shared/" + url.PathEscape(u.Username)
 }
 
+func (u *User) SanitizedName() string {
+	return sanitize(u.Name)
+}
+
+func (u *User) Path() string {
+	return sanitize(u.Name)
+}
+
 func (u *User) updateName(s string) {
 	if len(u.Name) == 0 {
 		u.updateString("Name", &u.Name, s)
