@@ -28,6 +28,15 @@ func (store *Store) Load() (*types.Library, error) {
 
 	data := &types.Library{}
 
+	// first only log errors
+	data.SetEvents(types.LibraryEvents{
+		OnError:      store.logError,
+		OnUserError:  store.logUserError,
+		OnGroupError: store.logGroupError,
+	})
+
+	log.Printf("Loading: %q", store.Basedir)
+
 	// for each user on Basedir
 	files, err := filepath.Glob(filepath.Join(store.Basedir, "*.yaml"))
 	if err != nil {
@@ -35,8 +44,6 @@ func (store *Store) Load() (*types.Library, error) {
 	}
 
 	for _, filename := range files {
-		log.Printf("Load: %q", filename)
-
 		if u, err := store.ReadUserFile(filename); err != nil {
 			check.AppendWrapped(err, "LoadUserFile")
 		} else if u, err := data.AddUser(u, unique); err != nil {
@@ -53,8 +60,23 @@ func (store *Store) Load() (*types.Library, error) {
 		}
 	}
 
+	// enable all event loggers
+	data.SetEvents(types.LibraryEvents{
+		OnNewUser:  store.logNewUser,
+		OnNewGroup: store.logNewGroup,
+
+		OnUserUpdate:  store.logUserUpdate,
+		OnGroupUpdate: store.logGroupUpdate,
+
+		OnError:      store.logError,
+		OnUserError:  store.logUserError,
+		OnGroupError: store.logGroupError,
+	})
+
 	if !check.Ok() {
-		return data, &check
+		err := &check
+		data.OnError(err)
+		return data, err
 	}
 	return data, nil
 }
@@ -151,8 +173,6 @@ func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types
 	}
 
 	for _, filename := range files {
-		log.Printf("Load: %q", filename)
-
 		if g, err := store.ReadGroupFile(filename); err != nil {
 			check.AppendWrapped(err, "LoadGroupFile")
 		} else if g != nil {
