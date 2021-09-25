@@ -22,16 +22,7 @@ func (c *Client) Commit() error {
 }
 
 func (c *Client) refreshSharedLibrary(ctx context.Context, offset int, users ...json.User) error {
-	i := offset
 	for _, u := range users {
-		i++
-
-		if u.Name != u.Id {
-			log.Printf("User.%v: %s (%s)", i, u.Name, u.Id)
-		} else {
-			log.Printf("User.%v: %s", i, u.Id)
-		}
-
 		if err := u.Apply(c.library); err != nil {
 			log.Println(err)
 		}
