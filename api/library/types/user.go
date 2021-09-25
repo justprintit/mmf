@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"go.sancus.dev/core/errors"
+
+	"github.com/justprintit/mmf/util"
 )
 
 type User struct {
@@ -21,11 +23,11 @@ func (u *User) GetSharedGroupsURL() string {
 }
 
 func (u *User) SanitizedName() string {
-	return sanitize(u.Name)
+	return util.Sanitize(u.Name)
 }
 
 func (u *User) Path() string {
-	return sanitize(u.Name)
+	return u.SanitizedName()
 }
 
 func (u *User) updateName(s string) {

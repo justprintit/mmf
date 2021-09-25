@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"go.sancus.dev/core/errors"
+
+	"github.com/justprintit/mmf/util"
 )
 
 type Group struct {
@@ -27,7 +29,7 @@ func (g *Group) GetObjectsURL() string {
 }
 
 func (g *Group) SanitizedName() string {
-	return sanitize(g.Name)
+	return util.Sanitize(g.Name)
 }
 
 func (g *Group) Path() string {

@@ -1,10 +1,10 @@
-package types
+package util
 
 import (
 	"strings"
 )
 
-func sanitize(s string) string {
+func Sanitize(s string) string {
 	s = strings.ReplaceAll(s, "/", "-")
 	s = strings.ReplaceAll(s, "\\", "-")
 	return s
