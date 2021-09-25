@@ -9,6 +9,6 @@ type User struct {
 
 type Group struct {
 	Id        int
-	Name      string  `yaml:"-"`
+	Name      string  `yaml:",omitempty"`
 	Subgroups []Group `yaml:",omitempty"`
 }

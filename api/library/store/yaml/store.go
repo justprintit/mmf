@@ -228,14 +228,18 @@ func (store *Store) writeGroups(base string, group *types.Group) error {
 		return err
 	}
 
+	// but the Group name isn't to be encoded in the files
+	name := g.Name
+	g.Name = ""
+
 	// output file
-	filename := filepath.Join(base, g.Name+".yaml")
+	filename := filepath.Join(base, name+".yaml")
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, StoreFileMode)
 	if err != nil {
 		return err
 	}
 
-	// encode
+	// encode, without Name field
 	adapter := NewEncoder(f)
 	err = adapter.Encode(g)
 
@@ -250,7 +254,7 @@ func (store *Store) writeGroups(base string, group *types.Group) error {
 	if len(group.Subgroups) > 0 {
 		var check errors.ErrorStack
 
-		base = filepath.Join(base, g.Name)
+		base = filepath.Join(base, name)
 		if err := os.MkdirAll(base, StoreDirectoryMode); err != nil {
 			check.AppendError(err)
 		} else {
