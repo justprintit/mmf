@@ -50,10 +50,7 @@ func (store *Store) Load() (*types.Library, error) {
 			check.AppendWrapped(err, "AddUser(%q)", u.Username)
 		} else {
 			// Groups
-			name := filepath.Base(filename)
-			name = strings.TrimSuffix(name, filepath.Ext(name))
-
-			base := filepath.Join(store.Basedir, name)
+			base := filepath.Join(store.Basedir, u.SanitizedName())
 			if err := store.loadGroups(data, u, nil, base); err != nil {
 				check.AppendWrapped(err, "LoadGroups(%q)", u.Username)
 			}
@@ -182,7 +179,13 @@ func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types
 				g, err = u.AddGroup(g, unique)
 			}
 
-			if err != nil {
+			if err == nil {
+				subdir := filepath.Join(base, g.SanitizedName())
+
+				if err = store.loadGroups(data, u, g, subdir); err != nil {
+					check.AppendWrapped(err, "LoadSubGroup(%v)", g.Id)
+				}
+			} else {
 				check.AppendWrapped(err, "AddGroup(%v)", g.Id)
 			}
 		}
