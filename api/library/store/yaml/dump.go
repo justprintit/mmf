@@ -3,7 +3,6 @@ package yaml
 import (
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strings"
 
@@ -23,9 +22,7 @@ const (
 
 // Export User data for YAML encoding
 func (store *Store) ExportUser(w *types.User, depth ExportDepth) (*User, error) {
-	name := strings.TrimSpace(w.Name)
-	name = strings.ReplaceAll(name, string(os.PathSeparator), "-")
-
+	name := w.SanitizedName()
 	if len(name) == 0 {
 		name = w.Username
 	}
@@ -78,8 +75,7 @@ func (store *Store) ExportGroups(w []*types.Group, depth ExportDepth) ([]Group, 
 
 // Export Group data for YAML encoding
 func (store *Store) ExportGroup(w *types.Group, depth ExportDepth) (Group, error) {
-	name := strings.TrimSpace(w.Name)
-	name = strings.ReplaceAll(name, string(os.PathSeparator), "-")
+	name := w.SanitizedName()
 	if len(name) == 0 {
 		name = fmt.Sprintf("%v", w.Id)
 	}
