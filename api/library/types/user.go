@@ -3,6 +3,7 @@ package types
 import (
 	"net/url"
 	"strings"
+	"time"
 
 	"go.sancus.dev/core/errors"
 
@@ -11,6 +12,9 @@ import (
 
 type User struct {
 	entry `json:"-"`
+
+	NextUserSharedLibraryUpdate time.Time `json:"-"`
+	NextUserSharedGroupsUpdate  time.Time `json:"-"`
 
 	Username string
 	Name     string

@@ -75,18 +75,19 @@ func (w *User) ExportGroups(recursive bool) []*types.Group {
 	return out
 }
 
-func (w *User) Apply(d *types.Library) error {
+func (w *User) Apply(d *types.Library) (*types.User, error) {
 	const merge = true
 	const groups = true
 
 	if u := w.Export(groups); u != nil {
-		_, err := d.AddUser(u, merge)
+		u, err := d.AddUser(u, merge)
 		if err != nil {
-			return errors.Wrap(err, "AddUser")
+			err = errors.Wrap(err, "AddUser")
 		}
+		return u, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (w *Users) Apply(d *types.Library) error {
@@ -103,7 +104,7 @@ func (w *Users) Apply(d *types.Library) error {
 
 	// apply them all to the library
 	for i, v := range w.Items {
-		if err := v.Apply(d); err != nil {
+		if _, err := v.Apply(d); err != nil {
 			check.AppendWrapped(err, "User.%v: %q", i, v.Username)
 		}
 	}

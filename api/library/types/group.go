@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"time"
 
 	"go.sancus.dev/core/errors"
 
@@ -14,6 +15,8 @@ type Group struct {
 	entry  `json:"-"`
 	user   *User  `json:"-"`
 	parent *Group `json:"-"`
+
+	NextGroupObjectsUpdate time.Time `json:"-"`
 
 	Name string
 	Id   int
@@ -55,6 +58,13 @@ func (g *Group) Path() string {
 	}
 
 	return path.Join(s...)
+}
+
+func (g *Group) User() *User {
+	g.entry.Lock()
+	defer g.entry.Unlock()
+
+	return g.user
 }
 
 func (g *Group) GroupsAll() []*Group {
