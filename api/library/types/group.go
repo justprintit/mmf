@@ -211,3 +211,15 @@ func (w *Library) registerGroup(g *Group) {
 	g.Library = w
 	w.group[g.Id] = g
 }
+
+func (w *Library) GetGroup(id int) (*Group, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if g, ok := w.group[id]; ok {
+		return g, nil
+	} else {
+		err := errors.New("%s[%v]: Not Found", "Group", id)
+		return nil, err
+	}
+}

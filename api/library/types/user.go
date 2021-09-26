@@ -51,6 +51,18 @@ func (u *User) updateString(field string, v *string, s string) {
 	}
 }
 
+func (w *Library) GetUser(user string) (*User, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if u, ok := w.User[user]; ok {
+		return u, nil
+	} else {
+		err := errors.New("%s[%q]: Not Found", "User", user)
+		return nil, err
+	}
+}
+
 func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 	var check errors.ErrorStack
 	var u0 *User
