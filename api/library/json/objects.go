@@ -78,7 +78,7 @@ func (obj *Object) Apply(d *types.Library, u *types.User, g *types.Group) error 
 	return nil
 }
 
-func (w *Objects) Apply(d *types.Library, u *types.User) error {
+func (w *Objects) Apply(d *types.Library, u *types.User, g *types.Group) error {
 	var check errors.ErrorStack
 
 	if n := len(w.Items); n > 0 {
@@ -89,7 +89,7 @@ func (w *Objects) Apply(d *types.Library, u *types.User) error {
 		}
 
 		for _, obj := range w.Items {
-			if err := obj.Apply(d, u, nil); err != nil {
+			if err := obj.Apply(d, u, g); err != nil {
 				check.AppendError(err)
 			}
 		}
