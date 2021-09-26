@@ -57,6 +57,25 @@ func (g *Group) Path() string {
 	return path.Join(s...)
 }
 
+func (g *Group) GroupsAll() []*Group {
+	g.entry.Lock()
+	defer g.entry.Unlock()
+
+	return g.groupsAll()
+}
+
+func (g *Group) groupsAll() []*Group {
+	groups := make([]*Group, 0, len(g.Subgroups)+1)
+	groups = append(groups, g)
+
+	for _, sg := range g.Subgroups {
+		all := sg.groupsAll()
+		groups = append(groups, all...)
+	}
+
+	return groups
+}
+
 func (g *Group) updateName(s string) {
 	if len(g.Name) == 0 {
 		g.updateString("Name", &g.Name, s)

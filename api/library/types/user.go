@@ -30,6 +30,18 @@ func (u *User) Path() string {
 	return u.SanitizedName()
 }
 
+func (u *User) GroupsAll() []*Group {
+	u.entry.Lock()
+	defer u.entry.Unlock()
+
+	groups := make([]*Group, 0, len(u.Groups))
+	for _, g := range u.Groups {
+		all := g.groupsAll()
+		groups = append(groups, all...)
+	}
+	return groups
+}
+
 func (u *User) updateName(s string) {
 	if len(u.Name) == 0 {
 		u.updateString("Name", &u.Name, s)
