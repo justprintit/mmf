@@ -13,7 +13,7 @@ import (
 
 type Groups struct {
 	Count int     `json:"total_count"`
-	Group []Group `json:"items"`
+	Items []Group `json:"items"`
 }
 
 type Group struct {
@@ -75,7 +75,7 @@ func (w *Group) Export(recursive bool) *types.Group {
 	return nil
 }
 
-func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) error {
+func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) (*types.Group, error) {
 	const merge = true
 
 	if g := w.Export(false); g != nil {
@@ -88,7 +88,7 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 		}
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// subgroups
@@ -109,8 +109,8 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 			})
 
 			for _, p := range subgroups {
-				if err := p.Apply(d, u, g); err != nil {
-					return err
+				if _, err := p.Apply(d, u, g); err != nil {
+					return g, err
 				}
 			}
 		}
@@ -133,11 +133,35 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 
 			if !check.Ok() {
 				err := &check
-				d.OnUserError(u, err)
-				return err
+				d.OnGroupError(g, err)
+				return g, err
 			}
+		}
+		return g, nil
+	}
+
+	return nil, nil
+}
+
+func (w *Groups) Apply(d *types.Library, u *types.User) error {
+	var check errors.ErrorStack
+
+	// expected quantity
+	if n := len(w.Items); n > 0 {
+		if n != w.Count {
+			log.Printf("Groups: expected:%v != actual:%v", w.Count, n)
 		}
 	}
 
+	// apply them all to the library
+	for i, v := range w.Items {
+		if _, err := v.Apply(d, u, nil); err != nil {
+			check.AppendWrapped(err, "Group.%v: %q (%v)", i, v.Name, v.Id)
+		}
+	}
+
+	if !check.Ok() {
+		return &check
+	}
 	return nil
 }

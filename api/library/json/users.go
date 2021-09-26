@@ -47,7 +47,7 @@ func (w *User) Export(groups bool) *types.User {
 }
 
 func (w *User) ExportGroups(recursive bool) []*types.Group {
-	n := len(w.Groups.Group)
+	n := len(w.Groups.Items)
 
 	if k := w.Groups.Count; k != n {
 		log.Printf("User.Groups: expected:%v != actual:%v", k, n)
@@ -55,8 +55,8 @@ func (w *User) ExportGroups(recursive bool) []*types.Group {
 
 	// export
 	out := make([]*types.Group, 0, n)
-	for i := range w.Groups.Group {
-		p := &w.Groups.Group[i]
+	for i := range w.Groups.Items {
+		p := &w.Groups.Items[i]
 		if _, ok := p.Id.Int(); ok {
 			// skip groups with string id
 			if g := p.Export(recursive); g != nil {
