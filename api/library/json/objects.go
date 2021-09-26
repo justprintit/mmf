@@ -3,8 +3,7 @@ package json
 import (
 	"log"
 
-	json "github.com/json-iterator/go"
-
+	"github.com/justprintit/mmf/api/client/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
 
@@ -72,7 +71,7 @@ type ObjectPrice struct {
 	Value    json.Number `json:"value"`
 }
 
-func (w *Objects) Apply(d *types.Library) error {
+func (w *Objects) Apply(d *types.Library, u *types.User) error {
 	if n := len(w.Items); n > 0 {
 		if v, err := w.Count.Int64(); err == nil {
 			if int64(n) != v {
@@ -80,7 +79,7 @@ func (w *Objects) Apply(d *types.Library) error {
 			}
 		}
 
-		return ApplyObjects(d, nil, nil, w.Items...)
+		return ApplyObjects(d, u, nil, w.Items...)
 	}
 	return nil
 }
