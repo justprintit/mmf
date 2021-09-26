@@ -3,6 +3,8 @@ package json
 import (
 	"log"
 
+	"go.sancus.dev/core/errors"
+
 	"github.com/justprintit/mmf/api/client/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
@@ -71,7 +73,14 @@ type ObjectPrice struct {
 	Value    json.Number `json:"value"`
 }
 
+func (obj *Object) Apply(d *types.Library, u *types.User, g *types.Group) error {
+	log.Printf("%s[%v]: %q", obj.ObjType, obj.Id, obj.Name)
+	return nil
+}
+
 func (w *Objects) Apply(d *types.Library, u *types.User) error {
+	var check errors.ErrorStack
+
 	if n := len(w.Items); n > 0 {
 		if v, err := w.Count.Int64(); err == nil {
 			if int64(n) != v {
@@ -79,11 +88,17 @@ func (w *Objects) Apply(d *types.Library, u *types.User) error {
 			}
 		}
 
-		return ApplyObjects(d, u, nil, w.Items...)
+		for _, obj := range w.Items {
+			if err := obj.Apply(d, u, nil); err != nil {
+				check.AppendError(err)
+			}
+		}
 	}
-	return nil
-}
 
-func ApplyObjects(d *types.Library, u *types.User, g *types.Group, objects ...Object) error {
+	if !check.Ok() {
+		err := &check
+		d.OnUserError(u, err)
+		return err
+	}
 	return nil
 }

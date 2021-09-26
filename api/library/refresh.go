@@ -31,19 +31,19 @@ func (c *Client) refreshSharedLibrary(ctx context.Context, offset int, users ...
 }
 
 func (c *Client) refreshPurchasesLibrary(ctx context.Context, offset int, objects ...json.Object) error {
-	i := offset
 	for _, obj := range objects {
-		i++
-		log.Printf("%s.%v: %q (%v, %q)", "Purchase", i, obj.Name, obj.Id, obj.ObjType)
+		if err := obj.Apply(c.library, nil, nil); err != nil {
+			log.Println(err)
+		}
 	}
 	return nil
 }
 
 func (c *Client) refreshPledgesLibrary(ctx context.Context, offset int, objects ...json.Object) error {
-	i := offset
 	for _, obj := range objects {
-		i++
-		log.Printf("%s.%v: %q (%v, %q)", "Pledge", i, obj.Name, obj.Id, obj.ObjType)
+		if err := obj.Apply(c.library, nil, nil); err != nil {
+			log.Println(err)
+		}
 	}
 	return nil
 }

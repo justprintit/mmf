@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"go.sancus.dev/core/errors"
+
 	"github.com/justprintit/mmf/api/client/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
@@ -115,13 +117,25 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) erro
 
 		// objects
 		if n := len(w.Items); n > 0 {
+			var check errors.ErrorStack
+
 			if v, err := w.Count.Int64(); err == nil {
 				if int64(n) != v {
 					log.Printf("Group[%v].Items: expected:%v != actual:%v", g.Id, v, n)
 				}
 			}
 
-			return ApplyObjects(d, u, g, w.Items...)
+			for _, obj := range w.Items {
+				if err := obj.Apply(d, u, g); err != nil {
+					check.AppendError(err)
+				}
+			}
+
+			if !check.Ok() {
+				err := &check
+				d.OnUserError(u, err)
+				return err
+			}
 		}
 	}
 
