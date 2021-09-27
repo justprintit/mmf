@@ -16,7 +16,7 @@ func (c *Client) GetSharedLibrary(ctx context.Context) (*json.Users, error) {
 	d, err := c.GetSharedLibraryPage(ctx, 0)
 	if err == nil {
 		// pagination
-		p := c.PagesN(len(d.Items), d.Count)
+		p := json.UsersPages(d)
 
 		// download further pages if needed
 		page, _, ok := p.Next(1)
@@ -51,7 +51,7 @@ func (c *Client) GetPurchasesLibrary(ctx context.Context) (*json.Objects, error)
 	d, err := c.GetPurchasesLibraryPage(ctx, 0)
 	if err == nil {
 		// pagination
-		p := c.PagesN(len(d.Items), d.Count)
+		p := json.ObjectsPages(d)
 
 		// download further pages if needed
 		page, _, ok := p.Next(1)
@@ -86,7 +86,7 @@ func (c *Client) GetPledgesLibrary(ctx context.Context) (*json.Objects, error) {
 	d, err := c.GetPledgesLibraryPage(ctx, 0)
 	if err == nil {
 		// pagination
-		p := c.PagesN(len(d.Items), d.Count)
+		p := json.ObjectsPages(d)
 
 		// download further pages if needed
 		page, _, ok := p.Next(1)
@@ -121,7 +121,7 @@ func (c *Client) GetTribesLibrary(ctx context.Context) (*json.Tribes, error) {
 	d, err := c.GetTribesLibraryPage(ctx, 0)
 	if err == nil {
 		// pagination
-		p := c.Pages(len(d.Items), d.Count)
+		p := json.TribesPages(d)
 
 		// download further pages if needed
 		page, _, ok := p.Next(1)

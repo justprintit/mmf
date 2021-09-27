@@ -35,18 +35,6 @@ for x in $LIBRARIES; do
 	n="${x%:*}"
 	t="${x#*:}"
 
-	# Count handler
-	case "$n" in
-	Tribes)
-		# int
-		pages=Pages
-		;;
-	*)
-		# json.Number
-		pages=PagesN
-		;;
-	esac
-
 cat <<EOT
 
 // get all JSON data of $n library
@@ -54,7 +42,7 @@ func (c *Client) Get${n}Library(ctx context.Context) (*json.$t, error) {
 	d, err := c.Get${n}LibraryPage(ctx, 0)
 	if err == nil {
 		// pagination
-		p := c.$pages(len(d.Items), d.Count)
+		p := json.${t}Pages(d)
 
 		// download further pages if needed
 		page, _, ok := p.Next(1)

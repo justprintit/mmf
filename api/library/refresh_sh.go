@@ -39,7 +39,7 @@ func refreshSharedLibraryCallback(c *Client, ctx context.Context, resp *resty.Re
 	d := json.SharedLibraryResult(resp)
 
 	// pagination
-	p := c.PagesN(len(d.Items), d.Count)
+	p := json.UsersPages(d)
 
 	// schedule further pages if needed
 	page, offset, ok := p.Next(1)
@@ -69,7 +69,7 @@ func refreshPurchasesLibraryCallback(c *Client, ctx context.Context, resp *resty
 	d := json.PurchasesLibraryResult(resp)
 
 	// pagination
-	p := c.PagesN(len(d.Items), d.Count)
+	p := json.ObjectsPages(d)
 
 	// schedule further pages if needed
 	page, offset, ok := p.Next(1)
@@ -99,7 +99,7 @@ func refreshPledgesLibraryCallback(c *Client, ctx context.Context, resp *resty.R
 	d := json.PledgesLibraryResult(resp)
 
 	// pagination
-	p := c.PagesN(len(d.Items), d.Count)
+	p := json.ObjectsPages(d)
 
 	// schedule further pages if needed
 	page, offset, ok := p.Next(1)
@@ -129,7 +129,7 @@ func refreshTribesLibraryCallback(c *Client, ctx context.Context, resp *resty.Re
 	d := json.TribesLibraryResult(resp)
 
 	// pagination
-	p := c.Pages(len(d.Items), d.Count)
+	p := json.TribesPages(d)
 
 	// schedule further pages if needed
 	page, offset, ok := p.Next(1)

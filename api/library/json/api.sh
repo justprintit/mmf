@@ -30,6 +30,36 @@ TYPES="${TYPES:+$TYPES }PurchasesLibrary:"
 TYPES="${TYPES:+$TYPES }SharedLibrary:Users"
 TYPES="${TYPES:+$TYPES }TribesLibrary:Tribes"
 
+TYPES_PAGES="$(for x in $TYPES; do
+	t="${x#*:}"
+	[ -n "$t" ] || t=Objects
+	echo "$t"
+	done | sort -u)"
+for t in $TYPES_PAGES; do
+
+	# FooPages()
+	#
+	case "$t" in
+	UserSharedLibrary)
+		continue # skip
+		;;
+	Groups|Tribes)
+		pages=Pages
+		;;
+	*)
+		pages=PagesN
+		;;
+	esac
+
+	cat <<EOT
+
+// works out if a $t response needs more pages
+func ${t}Pages(d *$t) *client.Pagination {
+	return client.$pages(len(d.Items), d.Count)
+}
+EOT
+done
+
 for x in $TYPES; do
 	N="${x%:*}"
 	t="${x#*:}"

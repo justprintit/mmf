@@ -63,18 +63,6 @@ for x in $LIBRARIES; do
 	n="${x%:*}"
 	t="${x#*:}"
 
-	# Count handler
-	case "$n" in
-	Tribes)
-		# int
-		pages=Pages
-		;;
-	*)
-		# json.Number
-		pages=PagesN
-		;;
-	esac
-
 cat <<EOT
 
 // pull first page of $n library
@@ -88,7 +76,7 @@ func refresh${n}LibraryCallback(c *Client, ctx context.Context, resp *resty.Resp
 	d := json.${n}LibraryResult(resp)
 
 	// pagination
-	p := c.$pages(len(d.Items), d.Count)
+	p := json.${t}Pages(d)
 
 	// schedule further pages if needed
 	page, offset, ok := p.Next(1)
