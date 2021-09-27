@@ -4,7 +4,6 @@ package library
 
 import (
 	"context"
-	"os"
 
 	"github.com/go-resty/resty/v2"
 
@@ -27,41 +26,6 @@ func (c *Client) RefreshLibraries(ctx context.Context) error {
 	c.SchedulePageRequest(json.TribesLibraryRequest, 0, refreshTribesLibraryCallback)
 
 	return nil
-}
-
-// get all JSON data of Shared library
-func (c *Client) GetSharedLibrary(ctx context.Context) (*json.Users, error) {
-	d, err := c.GetSharedLibraryPage(ctx, 0)
-	if err == nil {
-		// pagination
-		p := c.PagesN(len(d.Items), d.Count)
-
-		// download further pages if needed
-		page, _, ok := p.Next(1)
-		for ok {
-			var d2 *json.Users
-
-			d2, err = c.GetSharedLibraryPage(ctx, page)
-			if err != nil {
-				break
-			}
-
-			d.Items = append(d.Items, d2.Items...)
-		}
-	}
-	return d, err
-}
-
-// get requested page of JSON data of Shared library
-func (c *Client) GetSharedLibraryPage(ctx context.Context, page int) (*json.Users, error) {
-	resp, err := c.GetPage(ctx, json.SharedLibraryRequest, page)
-	if err != nil {
-		os.Stdout.Write(resp.Body())
-		return nil, err
-	}
-
-	out := json.SharedLibraryResult(resp)
-	return out, nil
 }
 
 // pull first page of Shared library
@@ -94,41 +58,6 @@ func refreshSharedLibraryCallback(c *Client, ctx context.Context, resp *resty.Re
 	return c.refreshSharedLibrary(ctx, 0, d.Items...)
 }
 
-// get all JSON data of Purchases library
-func (c *Client) GetPurchasesLibrary(ctx context.Context) (*json.Objects, error) {
-	d, err := c.GetPurchasesLibraryPage(ctx, 0)
-	if err == nil {
-		// pagination
-		p := c.PagesN(len(d.Items), d.Count)
-
-		// download further pages if needed
-		page, _, ok := p.Next(1)
-		for ok {
-			var d2 *json.Objects
-
-			d2, err = c.GetPurchasesLibraryPage(ctx, page)
-			if err != nil {
-				break
-			}
-
-			d.Items = append(d.Items, d2.Items...)
-		}
-	}
-	return d, err
-}
-
-// get requested page of JSON data of Purchases library
-func (c *Client) GetPurchasesLibraryPage(ctx context.Context, page int) (*json.Objects, error) {
-	resp, err := c.GetPage(ctx, json.PurchasesLibraryRequest, page)
-	if err != nil {
-		os.Stdout.Write(resp.Body())
-		return nil, err
-	}
-
-	out := json.PurchasesLibraryResult(resp)
-	return out, nil
-}
-
 // pull first page of Purchases library
 func (c *Client) RefreshPurchasesLibrary(ctx context.Context) error {
 	c.SchedulePageRequest(json.PurchasesLibraryRequest, 0, refreshPurchasesLibraryCallback)
@@ -159,41 +88,6 @@ func refreshPurchasesLibraryCallback(c *Client, ctx context.Context, resp *resty
 	return c.refreshPurchasesLibrary(ctx, 0, d.Items...)
 }
 
-// get all JSON data of Pledges library
-func (c *Client) GetPledgesLibrary(ctx context.Context) (*json.Objects, error) {
-	d, err := c.GetPledgesLibraryPage(ctx, 0)
-	if err == nil {
-		// pagination
-		p := c.PagesN(len(d.Items), d.Count)
-
-		// download further pages if needed
-		page, _, ok := p.Next(1)
-		for ok {
-			var d2 *json.Objects
-
-			d2, err = c.GetPledgesLibraryPage(ctx, page)
-			if err != nil {
-				break
-			}
-
-			d.Items = append(d.Items, d2.Items...)
-		}
-	}
-	return d, err
-}
-
-// get requested page of JSON data of Pledges library
-func (c *Client) GetPledgesLibraryPage(ctx context.Context, page int) (*json.Objects, error) {
-	resp, err := c.GetPage(ctx, json.PledgesLibraryRequest, page)
-	if err != nil {
-		os.Stdout.Write(resp.Body())
-		return nil, err
-	}
-
-	out := json.PledgesLibraryResult(resp)
-	return out, nil
-}
-
 // pull first page of Pledges library
 func (c *Client) RefreshPledgesLibrary(ctx context.Context) error {
 	c.SchedulePageRequest(json.PledgesLibraryRequest, 0, refreshPledgesLibraryCallback)
@@ -222,41 +116,6 @@ func refreshPledgesLibraryCallback(c *Client, ctx context.Context, resp *resty.R
 
 	// and process first page
 	return c.refreshPledgesLibrary(ctx, 0, d.Items...)
-}
-
-// get all JSON data of Tribes library
-func (c *Client) GetTribesLibrary(ctx context.Context) (*json.Tribes, error) {
-	d, err := c.GetTribesLibraryPage(ctx, 0)
-	if err == nil {
-		// pagination
-		p := c.Pages(len(d.Items), d.Count)
-
-		// download further pages if needed
-		page, _, ok := p.Next(1)
-		for ok {
-			var d2 *json.Tribes
-
-			d2, err = c.GetTribesLibraryPage(ctx, page)
-			if err != nil {
-				break
-			}
-
-			d.Items = append(d.Items, d2.Items...)
-		}
-	}
-	return d, err
-}
-
-// get requested page of JSON data of Tribes library
-func (c *Client) GetTribesLibraryPage(ctx context.Context, page int) (*json.Tribes, error) {
-	resp, err := c.GetPage(ctx, json.TribesLibraryRequest, page)
-	if err != nil {
-		os.Stdout.Write(resp.Body())
-		return nil, err
-	}
-
-	out := json.TribesLibraryResult(resp)
-	return out, nil
 }
 
 // pull first page of Tribes library

@@ -21,7 +21,6 @@ package library
 
 import (
 	"context"
-	"os"
 
 	"github.com/go-resty/resty/v2"
 
@@ -77,41 +76,6 @@ for x in $LIBRARIES; do
 	esac
 
 cat <<EOT
-
-// get all JSON data of $n library
-func (c *Client) Get${n}Library(ctx context.Context) (*json.$t, error) {
-	d, err := c.Get${n}LibraryPage(ctx, 0)
-	if err == nil {
-		// pagination
-		p := c.$pages(len(d.Items), d.Count)
-
-		// download further pages if needed
-		page, _, ok := p.Next(1)
-		for ok {
-			var d2 *json.$t
-
-			d2, err = c.Get${n}LibraryPage(ctx, page)
-			if err != nil {
-				break
-			}
-
-			d.Items = append(d.Items, d2.Items...)
-		}
-	}
-	return d, err
-}
-
-// get requested page of JSON data of $n library
-func (c *Client) Get${n}LibraryPage(ctx context.Context, page int) (*json.$t, error) {
-	resp, err := c.GetPage(ctx, json.${n}LibraryRequest, page)
-	if err != nil {
-		os.Stdout.Write(resp.Body())
-		return nil, err
-	}
-
-	out := json.${n}LibraryResult(resp)
-	return out, nil
-}
 
 // pull first page of $n library
 func (c *Client) Refresh${n}Library(ctx context.Context) error {
