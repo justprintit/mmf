@@ -55,26 +55,19 @@ func (c *Client) scheduleUserSharedLibrary(ctx context.Context, u *types.User) e
 }
 
 func NewUserSharedLibraryRequest(u *types.User) client.RequestOptions {
-	opt := SharedLibraryRequest
+	opt := json.SharedLibraryRequest
 	opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(u.Username))
 	opt.Path += fmt.Sprintf("/%s", url.PathEscape(u.Username))
 	opt.Result = json.UserSharedLibrary{}
 	return opt
 }
 
-func UserSharedLibraryResult(resp *resty.Response) *json.UserSharedLibrary {
-	if out := resp.Result(); out != nil {
-		return out.(*json.UserSharedLibrary)
-	}
-	return nil
-}
-
 func refreshUserSharedLibraryCallback(c *Client, ctx context.Context, resp *resty.Response) error {
-	if p := UserSharedLibraryResult(resp); p != nil {
+	if p := json.UserSharedLibraryResult(resp); p != nil {
 
 		// grab Username from Path
 		path := resp.RawResponse.Request.URL.Path
-		username := strings.TrimPrefix(path, SharedLibraryRequest.Path)
+		username := strings.TrimPrefix(path, json.SharedLibraryRequest.Path)
 		if username != path && len(username) > 1 && username[0] == '/' {
 			if username, err := url.PathUnescape(username[1:]); err == nil {
 
@@ -116,22 +109,15 @@ func (c *Client) scheduleUserSharedGroups(ctx context.Context, u *types.User) er
 }
 
 func NewGroupObjectsRequest(g *types.Group) client.RequestOptions {
-	opt := SharedLibraryRequest
+	opt := json.SharedLibraryRequest
 	opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(g.User().Username))
 	opt.Path = g.GetObjectsURL()
 	opt.Result = json.Objects{}
 	return opt
 }
 
-func GroupObjectsResult(resp *resty.Response) *json.Objects {
-	if out := resp.Result(); out != nil {
-		return out.(*json.Objects)
-	}
-	return nil
-}
-
 func refreshUserSharedGroupsCallback(c *Client, ctx context.Context, resp *resty.Response) error {
-	if p := GroupObjectsResult(resp); p != nil {
+	if p := json.UserSharedGroupsResult(resp); p != nil {
 
 		// grab GroupId from Path
 		path := resp.RawResponse.Request.URL.Path
