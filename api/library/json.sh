@@ -91,10 +91,9 @@ if [ -z "$LIBRARIES" ]; then
 
 func init() {
 	// avoid "imported and not used" errors
+	_ = context.Background
 	_ = os.Open
-	_ = resty.New
 	_ = json.Write
-	_ = client.DirectoryMode
 }
 EOT
 fi
