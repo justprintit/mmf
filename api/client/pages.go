@@ -1,4 +1,4 @@
-package library
+package client
 
 import (
 	"github.com/justprintit/mmf/api/client/json"
