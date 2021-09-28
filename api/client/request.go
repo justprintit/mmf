@@ -75,11 +75,15 @@ func (opt RequestOptions) New(c *Client, ctx context.Context) *Request {
 	// Referer
 	referer := opt.Referer
 	if len(referer) == 0 {
-		referer = "/"
+		referer = c.HostURL
+	} else if strings.HasPrefix(referer, "https://") || strings.HasPrefix(referer, "http://") {
+		// ready
 	} else if referer[0] != '/' {
-		referer = "/" + referer
+		referer = fmt.Sprintf("%s/%s", c.HostURL, referer)
+	} else {
+		referer = c.HostURL + referer
 	}
-	req.SetHeader("Referer", c.HostURL+referer)
+	req.SetHeader("Referer", referer)
 
 	// URL
 	path := opt.Path
