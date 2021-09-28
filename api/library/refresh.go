@@ -98,19 +98,11 @@ func (c *Client) scheduleUserSharedGroups(ctx context.Context, u *types.User) er
 			if t.After(g.NextGroupObjectsUpdate) {
 				g.NextGroupObjectsUpdate = t.Add(NextGroupObjectsUpdate)
 
-				c.Download(NewGroupObjectsRequest(g), refreshUserSharedGroupCallback)
+				c.Download(json.NewUserSharedGroupRequest(g), refreshUserSharedGroupCallback)
 			}
 		}
 		return nil
 	}
-}
-
-func NewGroupObjectsRequest(g *types.Group) client.RequestOptions {
-	opt := json.SharedLibraryRequest
-	opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(g.User().Username))
-	opt.Path = g.GetObjectsURL()
-	opt.Result = json.Objects{}
-	return opt
 }
 
 func refreshUserSharedGroupCallback(c *Client, ctx context.Context, resp *resty.Response) error {
