@@ -2,25 +2,21 @@ package library
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty/v2"
-
 	"go.sancus.dev/core/errors"
 	"go.sancus.dev/core/typeconv"
 
-	"github.com/justprintit/mmf/api/client"
 	"github.com/justprintit/mmf/api/library/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
 
 const (
 	NextUserSharedLibraryUpdate = 2 * time.Minute
-	NextUserSharedGroupUpdate   = 2 * time.Minute
 	NextGroupObjectsUpdate      = 2 * time.Minute
 )
 
@@ -38,90 +34,55 @@ func (c *Client) Commit() error {
 	return c.store.Store(c.library)
 }
 
-func (c *Client) scheduleUserSharedLibrary(ctx context.Context, u *types.User) error {
-	select {
-	case <-ctx.Done():
-		// cancelled
-		return ctx.Err()
-	default:
-		t := time.Now()
-		if t.After(u.NextUserSharedLibraryUpdate) {
-			u.NextUserSharedLibraryUpdate = t.Add(NextUserSharedLibraryUpdate)
+func (c *Client) refreshUserSharedLibraryFromRequest(ctx context.Context, req *http.Request, d *json.UserSharedLibrary) error {
+	// grab Username from Path
+	path := req.URL.Path
+	s := strings.TrimPrefix(path, "/data-library/shared/")
+	if username, err := url.PathUnescape(s); err == nil {
 
-			c.Download(NewUserSharedLibraryRequest(u), refreshUserSharedLibraryCallback)
+		// find User, and Apply data
+		u, err := c.library.GetUser(username)
+		if err == nil {
+			return c.refreshUserSharedLibrary(ctx, u, d)
 		}
-		return nil
+		return err
 	}
+
+	return errors.New("Invalid Path %q", path)
 }
 
-func NewUserSharedLibraryRequest(u *types.User) client.RequestOptions {
-	opt := json.SharedLibraryRequest
-	opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(u.Username))
-	opt.Path += fmt.Sprintf("/%s", url.PathEscape(u.Username))
-	opt.Result = json.UserSharedLibrary{}
-	return opt
+func (c *Client) refreshUserSharedLibrary(ctx context.Context, u *types.User, d *json.UserSharedLibrary) error {
+	return d.Apply(c.library, u)
 }
 
-func refreshUserSharedLibraryCallback(c *Client, ctx context.Context, resp *resty.Response) error {
-	if p := json.UserSharedLibraryResult(resp); p != nil {
+func (c *Client) refreshUserSharedGroupFromRequest(ctx context.Context, req *http.Request, d *json.Objects) error {
+	// grab GroupId from Path
+	path := req.URL.Path
+	s := strings.TrimPrefix(path, "/data-library/group/")
+	if id, err := typeconv.AsInt(s); err == nil {
 
-		// grab Username from Path
-		path := resp.RawResponse.Request.URL.Path
-		username := strings.TrimPrefix(path, json.SharedLibraryRequest.Path)
-		if username != path && len(username) > 1 && username[0] == '/' {
-			if username, err := url.PathUnescape(username[1:]); err == nil {
-
-				// find User, and Apply data
-				u, err := c.library.GetUser(username)
-				if err == nil {
-					err = p.Apply(c.library, u)
-				}
-				return err
-
-			}
+		// find Group, and Apply data
+		g, err := c.library.GetGroup(id)
+		if err == nil {
+			err = c.refreshUserSharedGroup(ctx, g, d)
 		}
-
-		return errors.New("Invalid Path %q", path)
+		return err
 	}
-	return nil
+
+	return errors.New("Invalid Path %q", path)
 }
 
-func (c *Client) scheduleUserSharedGroups(ctx context.Context, u *types.User) error {
-	select {
-	case <-ctx.Done():
-		// cancelled
-		return ctx.Err()
-	default:
-		t := time.Now()
+func (c *Client) refreshUserSharedGroup(ctx context.Context, g *types.Group, d *json.Objects) error {
+	var check errors.ErrorStack
 
-		for _, g := range u.GroupsAll() {
-			if t.After(g.NextGroupObjectsUpdate) {
-				g.NextGroupObjectsUpdate = t.Add(NextGroupObjectsUpdate)
-
-				c.Download(json.NewUserSharedGroupRequest(g), refreshUserSharedGroupCallback)
-			}
+	for _, obj := range d.Items {
+		if err := obj.Apply(c.library, nil, g); err != nil {
+			check.AppendError(err)
 		}
-		return nil
 	}
-}
 
-func refreshUserSharedGroupCallback(c *Client, ctx context.Context, resp *resty.Response) error {
-	if p := json.UserSharedGroupResult(resp); p != nil {
-
-		// grab GroupId from Path
-		path := resp.RawResponse.Request.URL.Path
-		s := strings.TrimPrefix(path, "/data-library/group/")
-		if id, err := typeconv.AsInt(s); err == nil {
-
-			// find Group, and Appy data
-			g, err := c.library.GetGroup(id)
-			if err == nil {
-				err = p.Apply(c.library, g.User(), g)
-			}
-			return err
-		}
-
-		return errors.New("Invalid Path %q", path)
+	if !check.Ok() {
+		return &check
 	}
 	return nil
 }
@@ -132,7 +93,7 @@ func (c *Client) refreshSharedLibrary(ctx context.Context, offset int, users ...
 			log.Println(err)
 		} else if err := c.scheduleUserSharedLibrary(ctx, u); err != nil {
 			log.Println(err)
-		} else if err := c.scheduleUserSharedGroups(ctx, u); err != nil {
+		} else if err := c.scheduleUserSharedGroup(ctx, u); err != nil {
 			log.Println(err)
 		}
 	}

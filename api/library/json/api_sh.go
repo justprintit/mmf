@@ -25,6 +25,11 @@ func UsersPages(d *Users) *client.Pagination {
 	return client.PagesN(len(d.Items), d.Count)
 }
 
+// works out if a Groups response needs more pages
+func GroupsPages(d *Groups) *client.Pagination {
+	return client.Pages(len(d.Items), d.Count)
+}
+
 // UserSharedGroupResult() pulls a *Objects out of a resty.Response
 func UserSharedGroupResult(resp *resty.Response) *Objects {
 	if out := resp.Result(); out != nil {

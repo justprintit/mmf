@@ -35,6 +35,7 @@ TYPES_PAGES="$(for x in $TYPES; do
 	[ -n "$t" ] || t=Objects
 	echo "$t"
 	done | sort -u)"
+TYPES_PAGES="${TYPES_PAGES:+$TYPES_PAGES }Groups"
 for t in $TYPES_PAGES; do
 
 	# FooPages()
