@@ -23,7 +23,7 @@ import (
 EOT
 
 TYPES=
-TYPES="${TYPES:+$TYPES }UserSharedGroups:"
+TYPES="${TYPES:+$TYPES }UserSharedGroup:"
 TYPES="${TYPES:+$TYPES }UserSharedLibrary"
 TYPES="${TYPES:+$TYPES }PledgesLibrary:"
 TYPES="${TYPES:+$TYPES }PurchasesLibrary:"

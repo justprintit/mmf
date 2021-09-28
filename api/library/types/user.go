@@ -14,7 +14,6 @@ type User struct {
 	entry `json:"-"`
 
 	NextUserSharedLibraryUpdate time.Time `json:"-"`
-	NextUserSharedGroupsUpdate  time.Time `json:"-"`
 
 	Username string
 	Name     string

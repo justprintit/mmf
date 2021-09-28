@@ -20,7 +20,7 @@ import (
 
 const (
 	NextUserSharedLibraryUpdate = 2 * time.Minute
-	NextUserSharedGroupsUpdate  = 2 * time.Minute
+	NextUserSharedGroupUpdate   = 2 * time.Minute
 	NextGroupObjectsUpdate      = 2 * time.Minute
 )
 
@@ -93,15 +93,12 @@ func (c *Client) scheduleUserSharedGroups(ctx context.Context, u *types.User) er
 		return ctx.Err()
 	default:
 		t := time.Now()
-		if t.After(u.NextUserSharedGroupsUpdate) {
-			u.NextUserSharedGroupsUpdate = t.Add(NextUserSharedGroupsUpdate)
 
-			for _, g := range u.GroupsAll() {
-				if t.After(g.NextGroupObjectsUpdate) {
-					g.NextGroupObjectsUpdate = t.Add(NextGroupObjectsUpdate)
+		for _, g := range u.GroupsAll() {
+			if t.After(g.NextGroupObjectsUpdate) {
+				g.NextGroupObjectsUpdate = t.Add(NextGroupObjectsUpdate)
 
-					c.Download(NewGroupObjectsRequest(g), refreshUserSharedGroupsCallback)
-				}
+				c.Download(NewGroupObjectsRequest(g), refreshUserSharedGroupCallback)
 			}
 		}
 		return nil
@@ -116,8 +113,8 @@ func NewGroupObjectsRequest(g *types.Group) client.RequestOptions {
 	return opt
 }
 
-func refreshUserSharedGroupsCallback(c *Client, ctx context.Context, resp *resty.Response) error {
-	if p := json.UserSharedGroupsResult(resp); p != nil {
+func refreshUserSharedGroupCallback(c *Client, ctx context.Context, resp *resty.Response) error {
+	if p := json.UserSharedGroupResult(resp); p != nil {
 
 		// grab GroupId from Path
 		path := resp.RawResponse.Request.URL.Path
