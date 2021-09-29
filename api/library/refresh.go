@@ -2,7 +2,6 @@ package library
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -81,49 +80,57 @@ func (c *Client) refreshUserSharedGroup(ctx context.Context, g *types.Group, d *
 		}
 	}
 
-	if !check.Ok() {
-		return &check
-	}
-	return nil
+	return check.AsError()
 }
 
 func (c *Client) refreshSharedLibrary(ctx context.Context, offset int, users ...json.User) error {
+	var check errors.ErrorStack
+
 	for _, w := range users {
 		if u, err := w.Apply(c.library); err != nil {
-			log.Println(err)
+			check.AppendError(err)
 		} else if err := c.scheduleUserSharedLibrary(ctx, u); err != nil {
-			log.Println(err)
+			check.AppendError(err)
 		} else if err := c.scheduleUserSharedGroup(ctx, u); err != nil {
-			log.Println(err)
+			check.AppendError(err)
 		}
 	}
-	return nil
+
+	return check.AsError()
 }
 
 func (c *Client) refreshPurchasesLibrary(ctx context.Context, offset int, objects ...json.Object) error {
+	var check errors.ErrorStack
+
 	for _, obj := range objects {
 		if err := obj.Apply(c.library, nil, nil); err != nil {
-			log.Println(err)
+			check.AppendError(err)
 		}
 	}
-	return nil
+
+	return check.AsError()
 }
 
 func (c *Client) refreshPledgesLibrary(ctx context.Context, offset int, objects ...json.Object) error {
+	var check errors.ErrorStack
+
 	for _, obj := range objects {
 		if err := obj.Apply(c.library, nil, nil); err != nil {
-			log.Println(err)
+			check.AppendError(err)
 		}
 	}
-	return nil
+
+	return check.AsError()
 }
 
 func (c *Client) refreshTribesLibrary(ctx context.Context, offset int, tribes ...json.Tribe) error {
-	i := offset
-	for _, u := range tribes {
-		i++
+	var check errors.ErrorStack
 
-		log.Printf("Tribe.%v: %s (%v)", i, u.Name, u.Id)
+	for _, w := range tribes {
+		if err := w.Apply(c.library); err != nil {
+			check.AppendError(err)
+		}
 	}
-	return nil
+
+	return check.AsError()
 }

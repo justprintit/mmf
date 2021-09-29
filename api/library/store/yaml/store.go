@@ -70,8 +70,7 @@ func (store *Store) Load() (*types.Library, error) {
 		OnGroupError: store.logGroupError,
 	})
 
-	if !check.Ok() {
-		err := &check
+	if err := check.AsError(); err != nil {
 		data.OnError(err)
 		return data, err
 	}
@@ -105,11 +104,7 @@ func (store *Store) Store(data *types.Library) error {
 		}
 	}
 
-	if !check.Ok() {
-		return &check
-	}
-
-	return nil
+	return check.AsError()
 }
 
 func (store *Store) writeUser(base string, user *types.User) error {
@@ -191,10 +186,7 @@ func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types
 		}
 	}
 
-	if !check.Ok() {
-		return &check
-	}
-	return nil
+	return check.AsError()
 }
 
 func (store *Store) ReadGroupFile(filename string) (*types.Group, error) {
@@ -265,9 +257,7 @@ func (store *Store) writeGroups(base string, group *types.Group) error {
 			}
 		}
 
-		if !check.Ok() {
-			return &check
-		}
+		return check.AsError()
 	}
 
 	return nil

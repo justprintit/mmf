@@ -109,8 +109,5 @@ func (w *Users) Apply(d *types.Library) error {
 		}
 	}
 
-	if !check.Ok() {
-		return &check
-	}
-	return nil
+	return check.AsError()
 }

@@ -66,11 +66,7 @@ func (store *Store) ExportGroups(w []*types.Group, depth ExportDepth) ([]Group, 
 		return groups[i].Id.Lt(groups[j].Id)
 	})
 
-	if !check.Ok() {
-		return groups, &check
-	}
-
-	return groups, nil
+	return groups, check.AsError()
 }
 
 // Export Group data for YAML encoding

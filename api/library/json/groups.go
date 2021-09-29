@@ -103,8 +103,7 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) (*ty
 				}
 			}
 
-			if !check.Ok() {
-				err := &check
+			if err := check.AsError(); err != nil {
 				d.OnGroupError(g, err)
 				return g, err
 			}
@@ -132,8 +131,5 @@ func (w *Groups) Apply(d *types.Library, u *types.User) error {
 		}
 	}
 
-	if !check.Ok() {
-		return &check
-	}
-	return nil
+	return check.AsError()
 }

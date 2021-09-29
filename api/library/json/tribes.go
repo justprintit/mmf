@@ -1,5 +1,11 @@
 package json
 
+import (
+	"log"
+
+	"github.com/justprintit/mmf/api/library/types"
+)
+
 type Tribes struct {
 	Count int     `json:"total_count,omitempty"`
 	Items []Tribe `json:"items,omitempty"`
@@ -23,4 +29,9 @@ type TribeGroup struct {
 	Name         string  `json:"name"`
 	TotalObjects int     `json:"total_count_objects,omitempty"`
 	Date         string  `json:"date,omitempty"`
+}
+
+func (w *Tribe) Apply(d *types.Library) error {
+	log.Printf("%s[%v]: %q", "Tribe", w.Id, w.Name)
+	return nil
 }

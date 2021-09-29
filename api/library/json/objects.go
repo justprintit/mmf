@@ -95,8 +95,7 @@ func (w *Objects) Apply(d *types.Library, u *types.User, g *types.Group) error {
 		}
 	}
 
-	if !check.Ok() {
-		err := &check
+	if err := check.AsError(); err != nil {
 		d.OnUserError(u, err)
 		return err
 	}

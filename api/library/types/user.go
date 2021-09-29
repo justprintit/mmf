@@ -137,8 +137,7 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 		}
 	}
 
-	if !check.Ok() {
-		err := &check
+	if err := check.AsError(); err != nil {
 		w.OnError(err)
 		return nil, err
 	}

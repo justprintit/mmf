@@ -227,8 +227,7 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 
 	}
 
-	if !check.Ok() {
-		err := &check
+	if err := check.AsError(); err != nil {
 		w.OnUserError(u, err)
 		return nil, err
 	}
