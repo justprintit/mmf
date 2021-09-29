@@ -57,8 +57,8 @@ func (w *User) ExportGroups(recursive bool) []*types.Group {
 	out := make([]*types.Group, 0, n)
 	for i := range w.Groups.Items {
 		p := &w.Groups.Items[i]
-		if _, ok := p.Id.Int(); ok {
-			// skip groups with string id
+
+		if !strings.HasPrefix(p.Id.String(), "all/") {
 			if g := p.Export(recursive); g != nil {
 				out = append(out, g)
 			}

@@ -69,7 +69,7 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) (*ty
 			subgroups := make([]*Group, 0, n)
 			for i := range w.Children {
 				p := &w.Children[i]
-				if _, ok := p.Id.Int(); ok {
+				if !strings.HasPrefix(p.Id.String(), "all/") {
 					subgroups = append(subgroups, p)
 				}
 			}
