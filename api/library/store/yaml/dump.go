@@ -63,7 +63,7 @@ func (store *Store) ExportGroups(w []*types.Group, depth ExportDepth) ([]Group, 
 
 	// sorted
 	sort.Slice(groups[:], func(i, j int) bool {
-		return groups[i].Id < groups[j].Id
+		return groups[i].Id.Lt(groups[j].Id)
 	})
 
 	if !check.Ok() {

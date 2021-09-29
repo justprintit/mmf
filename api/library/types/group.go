@@ -19,7 +19,7 @@ type Group struct {
 	NextGroupObjectsUpdate time.Time `json:"-"`
 
 	Name string
-	Id   int
+	Id   Id
 
 	Objects   []*Object `json:",omitempty"`
 	Subgroups []*Group  `json:",omitempty"`
@@ -28,7 +28,7 @@ type Group struct {
 type Object struct{}
 
 func (g *Group) GetObjectsURL() string {
-	return fmt.Sprintf("/data-library/group/%v", g.Id)
+	return fmt.Sprintf("/data-library/group/%s", g.Id.String())
 }
 
 func (g *Group) SanitizedName() string {
@@ -119,13 +119,17 @@ func (u *User) addGroup(g *Group, merge bool) (*Group, error) {
 	return addGroup(u, nil, g, merge)
 }
 
-func newGroup(u *User, parent *Group, id int, name string) *Group {
+func newGroup(u *User, parent *Group, id Id, name string) *Group {
+	if !id.Ok() {
+		panic(ErrInvalidValue)
+	}
+
 	w := u.entry.Library
 
 	// sanitize name
 	name = strings.TrimSpace(name)
 	if len(name) == 0 {
-		name = fmt.Sprintf("%v", id)
+		name = fmt.Sprintf("%s", id)
 	}
 
 	g := &Group{
@@ -171,7 +175,7 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 		return nil, err
 	}
 
-	if g.Id <= 0 {
+	if !g.Id.Ok() {
 		check.InvalidArgument("%s.%s", "Group", "Id")
 	} else if g0, ok = w.group[g.Id]; ok {
 		var err error
@@ -234,21 +238,24 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 
 func (w *Library) registerGroup(g *Group) {
 	if w.group == nil {
-		w.group = make(map[int]*Group, 1)
+		w.group = make(map[Id]*Group, 1)
 	}
 
 	g.Library = w
 	w.group[g.Id] = g
 }
 
-func (w *Library) GetGroup(id int) (*Group, error) {
+func (w *Library) GetGroup(v interface{}) (*Group, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if g, ok := w.group[id]; ok {
+	if id, err := NewId(v); err != nil {
+		err = errors.New("%s[%q]: %s", "Group", v, err)
+		return nil, err
+	} else if g, ok := w.group[id]; ok {
 		return g, nil
 	} else {
-		err := errors.New("%s[%v]: Not Found", "Group", id)
+		err = errors.New("%s[%v]: Not Found", "Group", v)
 		return nil, err
 	}
 }

@@ -7,7 +7,6 @@ import (
 
 	"go.sancus.dev/core/errors"
 
-	"github.com/justprintit/mmf/api/client/json"
 	"github.com/justprintit/mmf/api/library/types"
 )
 
@@ -26,40 +25,13 @@ type Group struct {
 }
 
 type GroupId struct {
-	id int
-	s  string
-}
-
-func (w *GroupId) Int() (int, bool) {
-	if len(w.s) > 0 {
-		return 0, false
-	} else {
-		return w.id, true
-	}
-}
-
-func (w *GroupId) UnmarshalJSON(data []byte) error {
-	if data[0] == '"' {
-		w.id = 0
-		return json.Unmarshal(data, &w.s)
-	} else {
-		w.s = ""
-		return json.Unmarshal(data, &w.id)
-	}
-}
-
-func (w *GroupId) MarshalJSON() ([]byte, error) {
-	if len(w.s) > 0 {
-		return json.Marshal(w.s)
-	} else {
-		return json.Marshal(w.id)
-	}
+	types.Id
 }
 
 func (w *Group) Export(recursive bool) *types.Group {
-	if id, ok := w.Id.Int(); ok {
+	if w.Id.Ok() {
 		g := &types.Group{
-			Id:   id,
+			Id:   w.Id.Id,
 			Name: strings.TrimSpace(w.Name),
 		}
 

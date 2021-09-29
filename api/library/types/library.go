@@ -23,7 +23,7 @@ type Library struct {
 	User map[string]*User `json:",omitempty"`
 
 	// index
-	group map[int]*Group
+	group map[Id]*Group
 }
 
 func (w *Library) SetEvents(ev LibraryEvents) {

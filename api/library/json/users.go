@@ -68,8 +68,8 @@ func (w *User) ExportGroups(recursive bool) []*types.Group {
 	// sort
 	sort.Slice(out[:], func(i, j int) bool {
 		a := out[i].Id
-		b := out[i].Id
-		return a < b
+		b := out[j].Id
+		return a.Lt(b)
 	})
 
 	return out

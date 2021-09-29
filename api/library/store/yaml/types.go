@@ -1,5 +1,9 @@
 package yaml
 
+import (
+	"github.com/justprintit/mmf/api/library/types"
+)
+
 type User struct {
 	Username string
 	Name     string  `yaml:"-"`
@@ -8,7 +12,7 @@ type User struct {
 }
 
 type Group struct {
-	Id        int
+	Id        types.Id
 	Name      string  `yaml:",omitempty"`
 	Subgroups []Group `yaml:",omitempty"`
 }
