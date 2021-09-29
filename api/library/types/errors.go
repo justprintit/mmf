@@ -1,7 +1,9 @@
 package types
 
 import (
-	"errors"
+	"go.sancus.dev/core/errors"
 )
 
-var ErrInvalidValue = errors.New("Invalid Value")
+func ErrInvalidValue(v interface{}) error {
+	return errors.New("Invalid Value: %v", v)
+}

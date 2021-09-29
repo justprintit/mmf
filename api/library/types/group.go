@@ -121,7 +121,7 @@ func (u *User) addGroup(g *Group, merge bool) (*Group, error) {
 
 func newGroup(u *User, parent *Group, id Id, name string) *Group {
 	if !id.Ok() {
-		panic(ErrInvalidValue)
+		panic(ErrInvalidValue(id))
 	}
 
 	w := u.entry.Library

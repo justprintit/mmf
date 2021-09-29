@@ -25,7 +25,7 @@ func NewId(v interface{}) (Id, error) {
 		}
 	}
 
-	return w, ErrInvalidValue
+	return w, ErrInvalidValue(v)
 }
 
 func (a Id) Lt(b Id) bool {
@@ -135,7 +135,7 @@ func (w *Id) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	return ErrInvalidValue
+	return ErrInvalidValue(data)
 }
 
 func (w *Id) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -145,7 +145,7 @@ func (w *Id) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	} else if w.SetFromString(s) {
 		return nil
 	} else {
-		return ErrInvalidValue
+		return ErrInvalidValue(s)
 	}
 }
 
@@ -154,13 +154,13 @@ func (w Id) MarshalJSON() ([]byte, error) {
 		return json.Marshal(v)
 	}
 
-	return []byte{}, ErrInvalidValue
+	return []byte{}, ErrInvalidValue(w)
 }
 
 func (w Id) MarshalYAML() (interface{}, error) {
 	if v, ok := w.Value(); ok {
 		return v, nil
 	} else {
-		return nil, ErrInvalidValue
+		return nil, ErrInvalidValue(w)
 	}
 }
