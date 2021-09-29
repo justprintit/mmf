@@ -144,3 +144,18 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 
 	return u0, nil
 }
+
+// UsernameFromURL() attempts to extract the username from a URL
+func UsernameFromURL(s string) (string, error) {
+
+	if u, err := url.Parse(s); err == nil {
+		if _, p, n := util.NextInPath(u.Path,
+			"/users/",
+			"/data-library/shared/",
+		); n > 0 {
+			return p, nil
+		}
+	}
+
+	return "", ErrInvalidPath(s)
+}
