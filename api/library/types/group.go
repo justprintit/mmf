@@ -129,7 +129,7 @@ func newGroup(u *User, parent *Group, id Id, name string) *Group {
 	// sanitize name
 	name = strings.TrimSpace(name)
 	if len(name) == 0 {
-		name = fmt.Sprintf("%s", id)
+		name = fmt.Sprintf("%s", id.String())
 	}
 
 	g := &Group{
