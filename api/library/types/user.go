@@ -15,22 +15,39 @@ type User struct {
 
 	NextUserSharedLibraryUpdate time.Time `json:"-"`
 
-	Username string
-	Name     string
-	Avatar   string   `json:",omitempty"`
-	Groups   []*Group `json:",omitempty"`
+	name     string
+	username string
+
+	Avatar string   `json:",omitempty"`
+	Groups []*Group `json:",omitempty"`
 }
 
 func (u *User) GetSharedGroupsURL() string {
-	return "/data-library/shared/" + url.PathEscape(u.Username)
+	return "/data-library/shared/" + url.PathEscape(u.username)
 }
 
-func (u *User) SanitizedName() string {
-	return util.Sanitize(u.Name)
+func (u *User) Id() string {
+	return u.username
+}
+
+func (u *User) Name() string {
+	return u.name
+}
+
+func (u *User) Type() NodeType {
+	return UserNode
 }
 
 func (u *User) Path() string {
-	return u.SanitizedName()
+	return u.Name()
+}
+
+func (u *User) User() *User {
+	return u
+}
+
+func (u *User) Parent() Node {
+	return nil
 }
 
 func (u *User) GroupsAll() []*Group {
@@ -45,9 +62,17 @@ func (u *User) GroupsAll() []*Group {
 	return groups
 }
 
+func (u *User) SetName(name string) {
+	name = util.Sanitize(name)
+	if name == "" {
+		name = u.username
+	}
+	u.updateString("Name", &u.name, name)
+}
+
 func (u *User) updateName(s string) {
-	if len(u.Name) == 0 {
-		u.updateString("Name", &u.Name, s)
+	if len(u.name) == 0 {
+		u.updateString("Name", &u.name, s)
 	}
 }
 
@@ -62,7 +87,23 @@ func (u *User) updateString(field string, v *string, s string) {
 	after := strings.TrimSpace(s)
 	if before != after {
 		*v = after
-		u.entry.OnUserUpdate(u, field, before, after)
+		u.entry.OnNodeUpdate(u, field, before, after)
+	}
+}
+
+func (u *User) appendGroup(g *Group) {
+	u.Groups = append(u.Groups, g)
+}
+
+func NewUser(username, name string) *User {
+	name = util.Sanitize(name)
+	if len(name) == 0 {
+		name = username
+	}
+
+	return &User{
+		username: username,
+		name:     name,
 	}
 }
 
@@ -70,7 +111,7 @@ func (w *Library) GetUser(user string) (*User, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if u, ok := w.User[user]; ok {
+	if u := w.getUser(user); u != nil {
 		return u, nil
 	} else {
 		err := errors.New("%s[%q]: Not Found", "User", user)
@@ -81,18 +122,13 @@ func (w *Library) GetUser(user string) (*User, error) {
 func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 	var check errors.ErrorStack
 	var u0 *User
-	var ok bool
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if w.User == nil {
-		w.User = make(map[string]*User, 1)
-	}
-
-	if user := u.Username; len(user) == 0 {
+	if user := u.username; len(user) == 0 {
 		check.MissingField("Username")
-	} else if u0, ok = w.User[user]; ok {
+	} else if u0 = w.getUser(user); u0 != nil {
 		// exists
 		if !merge {
 			err := errors.New("%s[%q]: Already exists", "User", user)
@@ -100,7 +136,7 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 			check.AppendError(err)
 		} else {
 			// merge
-			u0.updateName(u.Name)
+			u0.updateName(u.name)
 			u0.updateAvatar(u.Avatar)
 
 			// merge groups
@@ -112,22 +148,11 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 		}
 	} else {
 		// new
-		name := strings.TrimSpace(u.Name)
-		if len(name) == 0 {
-			name = u.Username
-		}
-
-		u0 = &User{
-			Username: u.Username,
-			Name:     name,
-			Avatar:   u.Avatar,
-		}
+		u0 = NewUser(u.username, u.name)
+		u0.Avatar = u.Avatar
 
 		// register
-		u0.Library = w
-		w.User[user] = u0
-
-		w.OnNewUser(u0)
+		w.registerUser(u0)
 
 		// add groups
 		for _, g := range u.Groups {
@@ -138,24 +163,48 @@ func (w *Library) AddUser(u *User, merge bool) (*User, error) {
 	}
 
 	if err := check.AsError(); err != nil {
-		w.OnError(err)
+		w.OnError(u0, err)
 		return nil, err
 	}
 
 	return u0, nil
 }
 
+func (w *Library) getUser(username string) *User {
+	if u := w.getNode(UserNode, username); u != nil {
+		return u.(*User)
+	}
+	return nil
+}
+
+func (w *Library) registerUser(u *User) {
+	u.entry.root = w
+	w.addNode(UserNode, u.username, u)
+	w.OnNewNode(u)
+}
+
+// Users() returns slice of registered usernames
+func (w *Library) Users() []string {
+	return w.Keys(UserNode)
+}
+
 // UsernameFromURL() attempts to extract the username from a URL
 func UsernameFromURL(s string) (string, error) {
-
 	if u, err := url.Parse(s); err == nil {
-		if _, p, n := util.NextInPath(u.Path,
-			"/users/",
-			"/data-library/shared/",
-		); n > 0 {
+		if p, err := UsernameFromPath(u.Path); err == nil {
 			return p, nil
 		}
 	}
+	return "", ErrInvalidPath(s)
+}
 
+// UsernameFromPath() attempts to extract the username from a URL.Path
+func UsernameFromPath(s string) (string, error) {
+	if _, p, _ := util.NextInPathUnescaped(s,
+		"/users/",
+		"/data-library/shared/",
+	); p != "" {
+		return p, nil
+	}
 	return "", ErrInvalidPath(s)
 }

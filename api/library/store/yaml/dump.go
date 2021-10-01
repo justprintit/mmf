@@ -1,7 +1,6 @@
 package yaml
 
 import (
-	"fmt"
 	"io"
 	"sort"
 	"strings"
@@ -22,13 +21,13 @@ const (
 
 // Export User data for YAML encoding
 func (store *Store) ExportUser(w *types.User, depth ExportDepth) (*User, error) {
-	name := w.SanitizedName()
+	name := w.Name()
 	if len(name) == 0 {
-		name = w.Username
+		name = w.Id()
 	}
 
 	u := &User{
-		Username: w.Username,
+		Username: w.Id(),
 		Name:     name,
 		Avatar:   w.Avatar,
 	}
@@ -70,45 +69,51 @@ func (store *Store) ExportGroups(w []*types.Group, depth ExportDepth) ([]Group, 
 }
 
 // Export Group data for YAML encoding
-func (store *Store) ExportGroup(w *types.Group, depth ExportDepth) (Group, error) {
-	name := w.SanitizedName()
+func (store *Store) ExportGroup(w *types.Group, depth ExportDepth) (g Group, err error) {
+	var id types.Id
+
+	name := w.Name()
 	if len(name) == 0 {
-		name = fmt.Sprintf("%v", w.Id)
+		name = w.Id()
 	}
 
-	g := Group{
-		Id:   w.Id,
+	id, err = types.NewId(w.Id())
+	if err != nil {
+		return
+	}
+
+	g = Group{
+		Id:   id,
 		Name: name,
 	}
 
-	if depth == ExportDeep && len(w.Subgroups) > 0 {
-		var err error
-
-		g.Subgroups, err = store.ExportGroups(w.Subgroups, depth)
-		if err != nil {
-			return g, err
-		}
+	if depth == ExportDeep && len(w.Groups) > 0 {
+		g.Subgroups, err = store.ExportGroups(w.Groups, depth)
 	}
 
-	return g, nil
+	return
 }
 
 // Export Library for YAML encoding
 func (store *Store) ExportSlice(data *types.Library, depth ExportDepth) yaml.MapSlice {
-	n := len(data.User)                 // users count
-	keys := make([]string, 0, n)        // for sorting, lower case names
+	keys := data.Users()                // list of user
+	n := len(keys)                      // users count
 	mkeys := make(map[string]*User, n)  // lower case name to user
 	slice := make([]yaml.MapItem, 0, n) // return value
 
-	for _, w := range data.User {
+	// convert unordered list of usernames
+	// into a sorted list of lower case names
+	for i, username := range keys {
+		w, _ := data.GetUser(username)
 		u, _ := store.ExportUser(w, depth)
 		key := strings.ToLower(u.Name)
 
-		keys = append(keys, key)
+		keys[i] = key
 		mkeys[key] = u
 	}
 
 	sort.Strings(keys)
+
 	for _, k := range keys {
 		u := mkeys[k]
 		m := yaml.MapItem{

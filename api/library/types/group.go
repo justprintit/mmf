@@ -2,7 +2,8 @@ package types
 
 import (
 	"fmt"
-	"path"
+	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -13,57 +14,49 @@ import (
 
 type Group struct {
 	entry  `json:"-"`
-	user   *User  `json:"-"`
-	parent *Group `json:"-"`
+	user   *User   `json:"-"`
+	parent Grouper `json:"-"`
 
 	NextGroupObjectsUpdate time.Time `json:"-"`
 
-	Name string
-	Id   Id
+	name string
+	id   string
 
-	Objects   []*Object `json:",omitempty"`
-	Subgroups []*Group  `json:",omitempty"`
+	Objects []*Object `json:",omitempty"`
+	Groups  []*Group  `json:",omitempty"`
 }
 
 type Object struct{}
 
 func (g *Group) GetObjectsURL() string {
-	return fmt.Sprintf("/data-library/group/%s", g.Id.String())
+	return fmt.Sprintf("/data-library/group/%s", g.id)
 }
 
-func (g *Group) SanitizedName() string {
-	return util.Sanitize(g.Name)
+func (g *Group) Id() string {
+	return g.id
+}
+
+func (g *Group) Name() string {
+	return g.name
+}
+
+func (g *Group) Type() NodeType {
+	return GroupNode
 }
 
 func (g *Group) Path() string {
-	var s = []string{g.SanitizedName()}
+	return filepath.Join(g.Parent().Path(), g.Name())
+}
 
-	for {
-		var name string
-
-		if g == nil {
-			break
-		} else if p := g.parent; p != nil {
-			g = p
-			name = g.SanitizedName()
-		} else {
-			u := g.user
-			g = nil
-			name = u.SanitizedName()
-		}
-
-		t := make([]string, 1, len(s)+1)
-		t[0] = name
-		s = append(t, s...)
+func (g *Group) Parent() Node {
+	if g.parent != nil {
+		return g.parent
+	} else {
+		return g.user
 	}
-
-	return path.Join(s...)
 }
 
 func (g *Group) User() *User {
-	g.entry.Lock()
-	defer g.entry.Unlock()
-
 	return g.user
 }
 
@@ -75,10 +68,10 @@ func (g *Group) GroupsAll() []*Group {
 }
 
 func (g *Group) groupsAll() []*Group {
-	groups := make([]*Group, 0, len(g.Subgroups)+1)
+	groups := make([]*Group, 0, len(g.Groups)+1)
 	groups = append(groups, g)
 
-	for _, sg := range g.Subgroups {
+	for _, sg := range g.Groups {
 		all := sg.groupsAll()
 		groups = append(groups, all...)
 	}
@@ -86,9 +79,21 @@ func (g *Group) groupsAll() []*Group {
 	return groups
 }
 
+func (g *Group) appendGroup(sg *Group) {
+	g.Groups = append(g.Groups, sg)
+}
+
+func (g *Group) SetName(name string) {
+	name = util.Sanitize(name)
+	if name == "" {
+		name = g.id
+	}
+	g.updateString("Name", &g.name, name)
+}
+
 func (g *Group) updateName(s string) {
-	if len(g.Name) == 0 {
-		g.updateString("Name", &g.Name, s)
+	if len(g.name) == 0 {
+		g.updateString("Name", &g.name, s)
 	}
 }
 
@@ -97,21 +102,29 @@ func (g *Group) updateString(field string, v *string, s string) {
 	after := strings.TrimSpace(s)
 	if before != after {
 		*v = after
-		g.entry.OnGroupUpdate(g, field, before, after)
+		g.entry.OnNodeUpdate(g, field, before, after)
 	}
 }
 
-func (g *Group) AddSubgroup(sg *Group, merge bool) (*Group, error) {
-	g.entry.Lock()
-	defer g.entry.Unlock()
+func (g *Group) AddGroup(sg *Group, merge bool) (*Group, error) {
+	if !g.entry.Lock() {
+		// Dummy
+		g.appendGroup(sg)
+		return sg, nil
+	}
 
+	defer g.entry.Unlock()
 	return addGroup(nil, g, sg, merge)
 }
 
 func (u *User) AddGroup(g *Group, merge bool) (*Group, error) {
-	u.entry.Lock()
-	defer u.entry.Unlock()
+	if !u.entry.Lock() {
+		// Dummy
+		u.appendGroup(g)
+		return g, nil
+	}
 
+	defer u.entry.Unlock()
 	return addGroup(u, nil, g, merge)
 }
 
@@ -119,55 +132,58 @@ func (u *User) addGroup(g *Group, merge bool) (*Group, error) {
 	return addGroup(u, nil, g, merge)
 }
 
-func newGroup(u *User, parent *Group, id Id, name string) *Group {
-	if !id.Ok() {
+// Creates dummy Group, disconnected from the library
+func NewGroup(id, name string) *Group {
+	return &Group{
+		id:   strings.TrimSpace(id),
+		name: util.Sanitize(name),
+	}
+}
+
+func newGroup(u *User, parent Grouper, id string, name string) *Group {
+	if len(id) == 0 {
 		panic(ErrInvalidValue(id))
 	}
 
-	w := u.entry.Library
+	w := u.Library()
 
 	// sanitize name
-	name = strings.TrimSpace(name)
+	name = util.Sanitize(name)
 	if len(name) == 0 {
-		name = fmt.Sprintf("%s", id.String())
+		name = id
 	}
 
 	g := &Group{
 		user:   u,
 		parent: parent,
 
-		Id:   id,
-		Name: name,
+		id:   id,
+		name: name,
 	}
 
 	w.registerGroup(g)
-	if parent == nil {
-		u.Groups = append(u.Groups, g)
-	} else {
-		parent.Subgroups = append(parent.Subgroups, g)
-	}
-	w.OnNewGroup(g)
+
+	w.OnNewNode(g)
 	return g
 }
 
-func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
+func addGroup(u *User, parent Grouper, g *Group, merge bool) (*Group, error) {
 	var check errors.ErrorStack
 	var g0 *Group
-	var ok bool
 
 	// validate user
 	if u == nil {
-		if parent == nil || parent.user == nil {
+		if parent == nil || parent.User() == nil {
 			err := errors.ErrMissingArgument("User not provided")
 			return nil, err
 		} else {
-			u = parent.user
+			u = parent.User()
 		}
 	}
 
-	w := u.entry.Library
+	w := u.entry.Library()
 
-	if u0, ok := w.User[u.Username]; ok {
+	if u0 := w.getUser(u.Id()); u0 != nil {
 		// just in case it's a dummy
 		u = u0
 	} else {
@@ -175,21 +191,21 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 		return nil, err
 	}
 
-	if !g.Id.Ok() {
+	if len(g.id) == 0 {
 		check.InvalidArgument("%s.%s", "Group", "Id")
-	} else if g0, ok = w.group[g.Id]; ok {
+	} else if g0 = w.getGroup(g.id); g0 != nil {
 		var err error
 
 		// exists
 		if !merge {
-			err = errors.New("%s[%v]: Already exists", "Group", g.Id)
+			err = errors.New("%s[%s]: Already exists", "Group", g.id)
 		} else if g0.user != u {
-			err = errors.New("%s[%v]: already assigned to user %q",
-				"Group", g.Id, g0.user.Username)
+			err = errors.New("%s[%s]: already assigned to user %q",
+				"Group", g.id, g0.user.Id())
 		} else {
 			if g0.parent == parent {
 				// same
-			} else if g0.parent != nil && parent != nil && g0.parent.Id == parent.Id {
+			} else if g0.parent != nil && parent != nil && g0.parent.Id() == parent.Id() && g0.parent.Type() == parent.Type() {
 				// dummy
 				parent = g0.parent
 			} else if g0.parent == nil {
@@ -205,10 +221,10 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 			check.AppendError(err)
 		} else {
 			// merge
-			g0.updateName(g.Name)
+			g0.updateName(g.name)
 
 			// merge subgroups
-			for _, sg := range g.Subgroups {
+			for _, sg := range g.Groups {
 				if _, err := addGroup(u, g0, sg, true); err != nil {
 					check.AppendError(err)
 				}
@@ -216,9 +232,9 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 		}
 	} else {
 		// new
-		g0 = newGroup(u, parent, g.Id, g.Name)
+		g0 = newGroup(u, parent, g.Id(), g.Name())
 
-		for _, sg := range g.Subgroups {
+		for _, sg := range g.Groups {
 			// new group, new subgroups.
 			if _, err := addGroup(u, g0, sg, false); err != nil {
 				check.AppendError(err)
@@ -228,33 +244,68 @@ func addGroup(u *User, parent *Group, g *Group, merge bool) (*Group, error) {
 	}
 
 	if err := check.AsError(); err != nil {
-		w.OnUserError(u, err)
+		w.OnError(u, err)
 		return nil, err
 	}
 
 	return g0, nil
 }
 
-func (w *Library) registerGroup(g *Group) {
-	if w.group == nil {
-		w.group = make(map[Id]*Group, 1)
+func (w *Library) getGroup(id string) *Group {
+	if g := w.getNode(GroupNode, id); g != nil {
+		return g.(*Group)
 	}
-
-	g.Library = w
-	w.group[g.Id] = g
+	return nil
 }
 
-func (w *Library) GetGroup(v interface{}) (*Group, error) {
+func (w *Library) registerGroup(g *Group) {
+	var pg groupAppender
+
+	g.entry.root = w
+	w.addNode(GroupNode, g.id, g)
+
+	if g.parent == nil {
+		pg = g.user
+	} else {
+		pg = g.parent.(groupAppender)
+	}
+
+	pg.appendGroup(g)
+}
+
+func (w *Library) GetGroup(id string) (*Group, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if id, err := NewId(v); err != nil {
-		err = errors.New("%s[%q]: %s", "Group", v, err)
-		return nil, err
-	} else if g, ok := w.group[id]; ok {
+	if g := w.getGroup(id); g != nil {
 		return g, nil
 	} else {
-		err = errors.New("%s[%v]: Not Found", "Group", v)
+		err := errors.New("%s[%v]: Not Found", GroupNode, id)
 		return nil, err
 	}
+}
+
+// Groups() returns slice of registered IDs
+func (w *Library) Groups() []string {
+	return w.Keys(GroupNode)
+}
+
+// GroupIdFromURL() attempts to extract the group Id from a URL
+func GroupIdFromURL(s string) (string, error) {
+	if u, err := url.Parse(s); err == nil {
+		if p, err := GroupIdFromPath(u.Path); err == nil {
+			return p, nil
+		}
+	}
+	return "", ErrInvalidPath(s)
+}
+
+// GroupIdFromPath() attempts to extract the group Id from a URL.Path
+func GroupIdFromPath(s string) (string, error) {
+	if _, p, _ := util.NextInPathUnescaped(s,
+		"/data-library/group/",
+	); p != "" {
+		return p, nil
+	}
+	return "", ErrInvalidPath(s)
 }

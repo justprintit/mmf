@@ -13,7 +13,7 @@ import (
 func NewUserSharedGroupRequest(g *types.Group) client.RequestOptions {
 	opt := SharedLibraryRequest
 	if u := g.User(); u != nil {
-		opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(u.Username))
+		opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(u.Id()))
 	}
 	opt.Path = g.GetObjectsURL()
 	opt.Result = Objects{}

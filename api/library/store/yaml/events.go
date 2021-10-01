@@ -11,15 +11,20 @@ import (
 )
 
 func (store *Store) logNewUser(w *types.Library, u *types.User) {
-	if u.Username != u.Name {
-		log.Printf("%c %s: %s (%s)", '+', "User", u.Path(), u.Username)
+	if username := u.Id(); username != u.Name() {
+		log.Printf("%c %s: %s (%s)", '+', "User", u.Path(), username)
 	} else {
 		log.Printf("%c %s: %s", '+', "User", u.Path())
 	}
 }
 
-func (store *Store) logNewGroup(w *types.Library, g *types.Group) {
-	log.Printf("%c %s: %s", '+', "Group", g.Path())
+func (store *Store) logNewNode(w *types.Library, g types.Node) {
+	if u, ok := g.(*types.User); ok {
+		store.logNewUser(w, u)
+	} else {
+		log.Printf("%c %s: %s", '+', g.Type(), g.Path())
+	}
+
 }
 
 func (store *Store) logUpdate(w *types.Library, before, after interface{}, prefix string, args ...interface{}) {
@@ -42,12 +47,8 @@ func (store *Store) logUpdate(w *types.Library, before, after interface{}, prefi
 	}
 }
 
-func (store *Store) logUserUpdate(w *types.Library, u *types.User, field string, before, after interface{}) {
-	store.logUpdate(w, before, after, "%s: %s: %s", "User", u.Path(), field)
-}
-
-func (store *Store) logGroupUpdate(w *types.Library, g *types.Group, field string, before, after interface{}) {
-	store.logUpdate(w, before, after, "%s: %s: %s", "Group", g.Path(), field)
+func (store *Store) logNodeUpdate(w *types.Library, g types.Node, field string, before, after interface{}) {
+	store.logUpdate(w, before, after, "%s: %s: %s", g.Type(), g.Path(), field)
 }
 
 func (store *Store) logErrorPrefixed(w *types.Library, err error, prefix string, args ...interface{}) {
@@ -90,14 +91,10 @@ single:
 	}
 }
 
-func (store *Store) logError(w *types.Library, err error) {
-	store.logErrorPrefixed(w, err, "")
-}
-
-func (store *Store) logUserError(w *types.Library, u *types.User, err error) {
-	store.logErrorPrefixed(w, err, "%s: %s", "User", u.Path())
-}
-
-func (store *Store) logGroupError(w *types.Library, g *types.Group, err error) {
-	store.logErrorPrefixed(w, err, "%s: %s", "Group", g.Path())
+func (store *Store) logError(w *types.Library, g types.Node, err error) {
+	if g == nil {
+		store.logErrorPrefixed(w, err, "")
+	} else {
+		store.logErrorPrefixed(w, err, "%s: %s", g.Type(), g.Path())
+	}
 }

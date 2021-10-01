@@ -96,7 +96,7 @@ func (w *Objects) Apply(d *types.Library, u *types.User, g *types.Group) error {
 	}
 
 	if err := check.AsError(); err != nil {
-		d.OnUserError(u, err)
+		d.OnError(u, err)
 		return err
 	}
 	return nil

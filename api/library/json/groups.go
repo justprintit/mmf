@@ -16,7 +16,7 @@ type Groups struct {
 }
 
 type Group struct {
-	Id           GroupId        `json:"id"`
+	Id           types.Id       `json:"id"`
 	Name         string         `json:"name"`
 	API          map[string]API `json:"apis,omitempty"`
 	TotalObjects int            `json:"total_count_objects,omitempty"`
@@ -24,21 +24,13 @@ type Group struct {
 	Objects
 }
 
-type GroupId struct {
-	types.Id
-}
-
 func (w *Group) Export(recursive bool) *types.Group {
 	if w.Id.Ok() {
-		g := &types.Group{
-			Id:   w.Id.Id,
-			Name: strings.TrimSpace(w.Name),
-		}
+		g := types.NewGroup(w.Id.String(), w.Name)
 
 		if recursive {
 			for _, v := range w.Children {
-				cg := v.Export(recursive)
-				g.Subgroups = append(g.Subgroups, cg)
+				g.AddGroup(v.Export(recursive), false)
 			}
 		}
 
@@ -56,7 +48,7 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) (*ty
 		if parent == nil {
 			g, err = u.AddGroup(g, merge)
 		} else {
-			g, err = parent.AddSubgroup(g, merge)
+			g, err = parent.AddGroup(g, merge)
 		}
 
 		if err != nil {
@@ -104,7 +96,7 @@ func (w *Group) Apply(d *types.Library, u *types.User, parent *types.Group) (*ty
 			}
 
 			if err := check.AsError(); err != nil {
-				d.OnGroupError(g, err)
+				d.OnError(g, err)
 				return g, err
 			}
 		}

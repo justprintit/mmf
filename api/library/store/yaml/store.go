@@ -30,9 +30,7 @@ func (store *Store) Load() (*types.Library, error) {
 
 	// first only log errors
 	data.SetEvents(types.LibraryEvents{
-		OnError:      store.logError,
-		OnUserError:  store.logUserError,
-		OnGroupError: store.logGroupError,
+		OnError: store.logError,
 	})
 
 	log.Printf("Loading: %q", store.Basedir)
@@ -47,31 +45,25 @@ func (store *Store) Load() (*types.Library, error) {
 		if u, err := store.ReadUserFile(filename); err != nil {
 			check.AppendWrapped(err, "LoadUserFile")
 		} else if u, err := data.AddUser(u, unique); err != nil {
-			check.AppendWrapped(err, "AddUser(%q)", u.Username)
+			check.AppendWrapped(err, "AddUser(%q)", u.Id())
 		} else {
 			// Groups
-			base := filepath.Join(store.Basedir, u.SanitizedName())
+			base := filepath.Join(store.Basedir, u.Name())
 			if err := store.loadGroups(data, u, nil, base); err != nil {
-				check.AppendWrapped(err, "LoadGroups(%q)", u.Username)
+				check.AppendWrapped(err, "LoadGroups(%q)", u.Id())
 			}
 		}
 	}
 
 	// enable all event loggers
 	data.SetEvents(types.LibraryEvents{
-		OnNewUser:  store.logNewUser,
-		OnNewGroup: store.logNewGroup,
-
-		OnUserUpdate:  store.logUserUpdate,
-		OnGroupUpdate: store.logGroupUpdate,
-
+		OnNewNode:    store.logNewNode,
+		OnNodeUpdate: store.logNodeUpdate,
 		OnError:      store.logError,
-		OnUserError:  store.logUserError,
-		OnGroupError: store.logGroupError,
 	})
 
 	if err := check.AsError(); err != nil {
-		data.OnError(err)
+		data.OnError(nil, err)
 		return data, err
 	}
 	return data, nil
@@ -81,16 +73,17 @@ func (store *Store) Store(data *types.Library) error {
 	var check errors.ErrorStack
 
 	// Users
-	for _, v := range data.User {
+	for _, id := range data.Users() {
+
 		base := store.Basedir
 
-		if err := store.writeUser(base, v); err != nil {
+		if v, err := data.GetUser(id); err != nil {
 			check.AppendError(err)
-		}
-
-		// Groups
-		if len(v.Groups) > 0 {
-			base = filepath.Join(base, v.Name)
+		} else if err := store.writeUser(base, v); err != nil {
+			check.AppendError(err)
+		} else if len(v.Groups) > 0 {
+			// Groups
+			base = filepath.Join(base, v.Name())
 
 			if err := os.MkdirAll(base, StoreDirectoryMode); err != nil {
 				check.AppendError(err)
@@ -138,19 +131,21 @@ func (store *Store) ReadUserFile(filename string) (*types.User, error) {
 	defer f.Close()
 
 	// decode
-	u := &types.User{}
+	u := &User{}
 	adaptor := NewDecoder(f)
 	if err = adaptor.Decode(u); err != nil {
 		return nil, err
 	}
 
-	if len(u.Name) == 0 {
+	if u.Name == "" {
 		// use filename as user name
 		base := strings.TrimSpace(filepath.Base(filename))
 		u.Name = strings.TrimSuffix(base, filepath.Ext(base))
 	}
 
-	return u, nil
+	user := types.NewUser(u.Username, u.Name)
+	user.Avatar = u.Avatar
+	return user, nil
 }
 
 func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types.Group, base string) error {
@@ -169,13 +164,13 @@ func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types
 			check.AppendWrapped(err, "LoadGroupFile")
 		} else if g != nil {
 			if parent != nil {
-				g, err = parent.AddSubgroup(g, unique)
+				g, err = parent.AddGroup(g, unique)
 			} else {
 				g, err = u.AddGroup(g, unique)
 			}
 
 			if err == nil {
-				subdir := filepath.Join(base, g.SanitizedName())
+				subdir := filepath.Join(base, g.Name())
 
 				if err = store.loadGroups(data, u, g, subdir); err != nil {
 					check.AppendWrapped(err, "LoadSubGroup(%v)", g.Id)
@@ -198,19 +193,20 @@ func (store *Store) ReadGroupFile(filename string) (*types.Group, error) {
 	defer f.Close()
 
 	// decode
-	g := &types.Group{}
+	g := &Group{}
 	adaptor := NewDecoder(f)
 	if err = adaptor.Decode(g); err != nil {
 		return nil, err
 	}
 
-	if len(g.Name) == 0 {
+	if g.Name == "" {
 		// use filename as group name
 		base := strings.TrimSpace(filepath.Base(filename))
 		g.Name = strings.TrimSuffix(base, filepath.Ext(base))
 	}
 
-	return g, nil
+	group := types.NewGroup(g.Id.String(), g.Name)
+	return group, nil
 }
 
 func (store *Store) writeGroups(base string, group *types.Group) error {
@@ -243,14 +239,14 @@ func (store *Store) writeGroups(base string, group *types.Group) error {
 	}
 
 	// subgroups
-	if len(group.Subgroups) > 0 {
+	if len(group.Groups) > 0 {
 		var check errors.ErrorStack
 
 		base = filepath.Join(base, name)
 		if err := os.MkdirAll(base, StoreDirectoryMode); err != nil {
 			check.AppendError(err)
 		} else {
-			for _, sg := range group.Subgroups {
+			for _, sg := range group.Groups {
 				if err = store.writeGroups(base, sg); err != nil {
 					check.AppendError(err)
 				}

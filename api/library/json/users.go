@@ -31,11 +31,8 @@ func (w *User) Export(groups bool) *types.User {
 		name = w.Username
 	}
 
-	u := &types.User{
-		Username: w.Username,
-		Name:     name,
-		Avatar:   w.Avatar,
-	}
+	u := types.NewUser(w.Username, name)
+	u.Avatar = w.Avatar
 
 	if groups {
 		const recursive = true
@@ -67,9 +64,9 @@ func (w *User) ExportGroups(recursive bool) []*types.Group {
 
 	// sort
 	sort.Slice(out[:], func(i, j int) bool {
-		a := out[i].Id
-		b := out[j].Id
-		return a.Lt(b)
+		a := out[i].Id()
+		b := out[j].Id()
+		return a < b
 	})
 
 	return out

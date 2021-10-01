@@ -25,10 +25,10 @@ type TribeGroups struct {
 }
 
 type TribeGroup struct {
-	Id           GroupId `json:"id"`
-	Name         string  `json:"name"`
-	TotalObjects int     `json:"total_count_objects,omitempty"`
-	Date         string  `json:"date,omitempty"`
+	Id           types.Id `json:"id"`
+	Name         string   `json:"name"`
+	TotalObjects int      `json:"total_count_objects,omitempty"`
+	Date         string   `json:"date,omitempty"`
 }
 
 func (w *Tribe) Apply(d *types.Library) error {

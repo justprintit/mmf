@@ -27,7 +27,7 @@ func (p *UserSharedLibrary) Apply(d *types.Library, u *types.User) error {
 // /data-library/shared/{username}
 func NewUserSharedLibraryRequest(u *types.User) client.RequestOptions {
 	referer := SharedLibraryRequest.Referer
-	referer = fmt.Sprintf("%s&s=all/%s", referer, url.QueryEscape(u.Username))
+	referer = fmt.Sprintf("%s&s=all/%s", referer, url.QueryEscape(u.Id()))
 
 	return client.RequestOptions{
 		Accept:  "application/json",

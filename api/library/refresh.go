@@ -3,12 +3,9 @@ package library
 import (
 	"context"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"go.sancus.dev/core/errors"
-	"go.sancus.dev/core/typeconv"
 
 	"github.com/justprintit/mmf/api/library/json"
 	"github.com/justprintit/mmf/api/library/types"
@@ -36,8 +33,7 @@ func (c *Client) Commit() error {
 func (c *Client) refreshUserSharedLibraryFromRequest(ctx context.Context, req *http.Request, d *json.UserSharedLibrary) error {
 	// grab Username from Path
 	path := req.URL.Path
-	s := strings.TrimPrefix(path, "/data-library/shared/")
-	if username, err := url.PathUnescape(s); err == nil {
+	if username, err := types.UsernameFromPath(path); err == nil {
 
 		// find User, and Apply data
 		u, err := c.library.GetUser(username)
@@ -57,8 +53,7 @@ func (c *Client) refreshUserSharedLibrary(ctx context.Context, u *types.User, d 
 func (c *Client) refreshUserSharedGroupFromRequest(ctx context.Context, req *http.Request, d *json.Objects) error {
 	// grab GroupId from Path
 	path := req.URL.Path
-	s := strings.TrimPrefix(path, "/data-library/group/")
-	if id, err := typeconv.AsInt(s); err == nil {
+	if id, err := types.GroupIdFromPath(path); err == nil {
 
 		// find Group, and Apply data
 		g, err := c.library.GetGroup(id)
