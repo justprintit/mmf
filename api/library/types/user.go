@@ -108,6 +108,42 @@ func (u *User) updateString(field string, v *string, s string) {
 	}
 }
 
+func (u *User) HasNodes() bool {
+	if len(u.Groups) > 0 {
+		return true
+	}
+	if len(u.Tribes) > 0 {
+		return true
+	}
+	return false
+}
+
+func (u *User) Nodes() []Node {
+	n := len(u.Groups) + len(u.Tribes)
+	nodes := make([]Node, 0, n)
+
+	for _, g := range u.Groups {
+		nodes = append(nodes, g)
+	}
+
+	for _, g := range u.Tribes {
+		nodes = append(nodes, g)
+	}
+
+	return nodes
+}
+
+func (u *User) AddNode(g Node, merge bool) (Node, error) {
+	if g0, ok := g.(*Group); ok {
+		return u.AddGroup(g0, merge)
+	} else if g0, ok := g.(*Tribe); ok {
+		return u.AddTribe(g0, merge)
+	} else {
+		err := errors.ErrInvalidValue("%s[%q]: %T (%s)", u.Type(), u.Id(), g, g.Type())
+		return nil, err
+	}
+}
+
 func (u *User) appendGroup(g *Group) {
 	u.Groups = append(u.Groups, g)
 }

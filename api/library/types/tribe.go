@@ -85,6 +85,30 @@ func (g *Tribe) updateString(field string, v *string, s string) {
 	}
 }
 
+func (g *Tribe) HasNodes() bool {
+	return len(g.Groups) > 0
+}
+
+func (g *Tribe) Nodes() []Node {
+	n := len(g.Groups)
+	nodes := make([]Node, 0, n)
+
+	for _, g := range g.Groups {
+		nodes = append(nodes, g)
+	}
+
+	return nodes
+}
+
+func (g *Tribe) AddNode(sg Node, merge bool) (Node, error) {
+	if g0, ok := sg.(*Group); ok {
+		return g.AddGroup(g0, merge)
+	} else {
+		err := errors.ErrInvalidValue("%s[%s]: %T (%s)", g.Type(), g.Id(), sg, sg.Type())
+		return nil, err
+	}
+}
+
 func (g *Tribe) appendGroup(sg *Group) {
 	g.Groups = append(g.Groups, sg)
 }

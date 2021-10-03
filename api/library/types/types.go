@@ -40,6 +40,10 @@ type Node interface {
 	Library() *Library
 	User() *User
 	Parent() Node
+
+	AddNode(Node, bool) (Node, error)
+	HasNodes() bool
+	Nodes() []Node
 }
 
 type Grouper interface {
