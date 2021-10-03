@@ -117,6 +117,17 @@ func (g *Group) AddGroup(sg *Group, merge bool) (*Group, error) {
 	return addGroup(nil, g, sg, merge)
 }
 
+func (g *Tribe) AddGroup(sg *Group, merge bool) (*Group, error) {
+	if !g.entry.Lock() {
+		// Dummy
+		g.appendGroup(sg)
+		return sg, nil
+	}
+
+	defer g.entry.Unlock()
+	return addGroup(nil, g, sg, merge)
+}
+
 func (u *User) AddGroup(g *Group, merge bool) (*Group, error) {
 	if !u.entry.Lock() {
 		// Dummy

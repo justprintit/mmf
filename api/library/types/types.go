@@ -11,14 +11,17 @@ const (
 	GroupNode NodeType = iota
 	ObjectNode
 	UserNode
+	TribeNode
 
-	NodeTypes int = 3
+	NodeTypes int = 4
 )
 
 func (t NodeType) String() string {
 	switch t {
 	case UserNode:
 		return "User"
+	case TribeNode:
+		return "Tribe"
 	case GroupNode:
 		return "Group"
 	case ObjectNode:

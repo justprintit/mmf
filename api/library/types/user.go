@@ -20,6 +20,7 @@ type User struct {
 
 	Avatar string   `json:",omitempty"`
 	Groups []*Group `json:",omitempty"`
+	Tribes []*Tribe `json:",omitempty"`
 }
 
 func (u *User) GetSharedGroupsURL() string {
@@ -54,11 +55,27 @@ func (u *User) GroupsAll() []*Group {
 	u.entry.Lock()
 	defer u.entry.Unlock()
 
-	groups := make([]*Group, 0, len(u.Groups))
+	return u.groupsAll()
+}
+
+func (u *User) groupsAll() []*Group {
+	n := len(u.Groups)
+	for _, tribe := range u.Tribes {
+		n += len(tribe.Groups)
+	}
+
+	groups := make([]*Group, 0, n)
+
 	for _, g := range u.Groups {
 		all := g.groupsAll()
 		groups = append(groups, all...)
 	}
+
+	for _, tribe := range u.Tribes {
+		all := tribe.groupsAll()
+		groups = append(groups, all...)
+	}
+
 	return groups
 }
 
