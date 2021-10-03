@@ -33,26 +33,23 @@ func (store *Store) ExportUser(w *types.User, depth ExportDepth) (*User, error) 
 	}
 
 	if depth == ExportDeep {
-		var err error
+		group, err := store.ExportNodes(w.Nodes(), depth)
+		u.Groups = group
 
-		u.Groups, err = store.ExportGroups(w.Groups, depth)
-		if err != nil {
-			return u, err
-		}
+		return u, err
 	}
 
 	return u, nil
 }
 
-// Export Groups data for YAML encoding
-func (store *Store) ExportGroups(w []*types.Group, depth ExportDepth) ([]Group, error) {
+func (store *Store) ExportNodes(w []types.Node, depth ExportDepth) ([]Group, error) {
 	var check errors.ErrorStack
 
 	groups := make([]Group, 0, len(w))
 
 	// groups
 	for _, g0 := range w {
-		g, err := store.ExportGroup(g0, depth)
+		g, err := store.ExportNode(g0, depth)
 		if err != nil {
 			check.AppendError(err)
 		} else {
@@ -68,8 +65,8 @@ func (store *Store) ExportGroups(w []*types.Group, depth ExportDepth) ([]Group, 
 	return groups, check.AsError()
 }
 
-// Export Group data for YAML encoding
-func (store *Store) ExportGroup(w *types.Group, depth ExportDepth) (g Group, err error) {
+// Export Node data for YAML encoding
+func (store *Store) ExportNode(w types.Node, depth ExportDepth) (g Group, err error) {
 	var id types.Id
 
 	name := w.Name()
@@ -87,8 +84,12 @@ func (store *Store) ExportGroup(w *types.Group, depth ExportDepth) (g Group, err
 		Name: name,
 	}
 
-	if depth == ExportDeep && len(w.Groups) > 0 {
-		g.Subgroups, err = store.ExportGroups(w.Groups, depth)
+	if _, ok := w.(*types.Group); !ok {
+		g.Type = strings.ToLower(w.Type().String())
+	}
+
+	if depth == ExportDeep {
+		g.Subgroups, err = store.ExportNodes(w.Nodes(), depth)
 	}
 
 	return

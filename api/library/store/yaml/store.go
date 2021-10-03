@@ -47,10 +47,10 @@ func (store *Store) Load() (*types.Library, error) {
 		} else if u, err := data.AddUser(u, unique); err != nil {
 			check.AppendWrapped(err, "AddUser(%q)", u.Id())
 		} else {
-			// Groups
+			// Groups and Tribes
 			base := filepath.Join(store.Basedir, u.Name())
-			if err := store.loadGroups(data, u, nil, base); err != nil {
-				check.AppendWrapped(err, "LoadGroups(%q)", u.Id())
+			if err := store.loadNodes(data, u, nil, base); err != nil {
+				check.AppendWrapped(err, "LoadNodes(%q)", u.Id())
 			}
 		}
 	}
@@ -81,15 +81,14 @@ func (store *Store) Store(data *types.Library) error {
 			check.AppendError(err)
 		} else if err := store.writeUser(base, v); err != nil {
 			check.AppendError(err)
-		} else if len(v.Groups) > 0 {
-			// Groups
+		} else if v.HasNodes() {
 			base = filepath.Join(base, v.Name())
 
 			if err := os.MkdirAll(base, StoreDirectoryMode); err != nil {
 				check.AppendError(err)
 			} else {
-				for _, g := range v.Groups {
-					if err := store.writeGroups(base, g); err != nil {
+				for _, g := range v.Nodes() {
+					if err := store.writeNodes(base, g); err != nil {
 						check.AppendError(err)
 					}
 				}
@@ -148,7 +147,7 @@ func (store *Store) ReadUserFile(filename string) (*types.User, error) {
 	return user, nil
 }
 
-func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types.Group, base string) error {
+func (store *Store) loadNodes(data *types.Library, u *types.User, parent types.Node, base string) error {
 	var check errors.ErrorStack
 
 	const unique = false
@@ -160,20 +159,21 @@ func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types
 	}
 
 	for _, filename := range files {
-		if g, err := store.ReadGroupFile(filename); err != nil {
-			check.AppendWrapped(err, "LoadGroupFile")
+		if g, err := store.ReadNodeFile(filename); err != nil {
+			check.AppendWrapped(err, "ReadNodeFile")
 		} else if g != nil {
+
 			if parent != nil {
-				g, err = parent.AddGroup(g, unique)
+				g, err = parent.AddNode(g, unique)
 			} else {
-				g, err = u.AddGroup(g, unique)
+				g, err = u.AddNode(g, unique)
 			}
 
 			if err == nil {
 				subdir := filepath.Join(base, g.Name())
 
-				if err = store.loadGroups(data, u, g, subdir); err != nil {
-					check.AppendWrapped(err, "LoadSubGroup(%v)", g.Id)
+				if err = store.loadNodes(data, u, g, subdir); err != nil {
+					check.AppendWrapped(err, "LoadNodes(%v)", g.Id)
 				}
 			} else {
 				check.AppendWrapped(err, "AddGroup(%v)", g.Id)
@@ -184,7 +184,7 @@ func (store *Store) loadGroups(data *types.Library, u *types.User, parent *types
 	return check.AsError()
 }
 
-func (store *Store) ReadGroupFile(filename string) (*types.Group, error) {
+func (store *Store) ReadNodeFile(filename string) (types.Node, error) {
 	// open file for reading
 	f, err := os.Open(filename)
 	if err != nil {
@@ -205,13 +205,22 @@ func (store *Store) ReadGroupFile(filename string) (*types.Group, error) {
 		g.Name = strings.TrimSuffix(base, filepath.Ext(base))
 	}
 
-	group := types.NewGroup(g.Id.String(), g.Name)
-	return group, nil
+	switch g.Type {
+	case "":
+		group := types.NewGroup(g.Id.String(), g.Name)
+		return group, nil
+	case "tribe":
+		tribe := types.NewTribe(g.Id.String(), g.Name)
+		return tribe, nil
+	default:
+		err := errors.ErrInvalidValue("%s.%s: %q", "Group", "Type", g.Type)
+		return nil, err
+	}
 }
 
-func (store *Store) writeGroups(base string, group *types.Group) error {
+func (store *Store) writeNodes(base string, group types.Node) error {
 	// prepare data
-	g, err := store.ExportGroup(group, ExportShallow)
+	g, err := store.ExportNode(group, ExportShallow)
 	if err != nil || len(g.Name) == 0 {
 		return err
 	}
@@ -239,15 +248,15 @@ func (store *Store) writeGroups(base string, group *types.Group) error {
 	}
 
 	// subgroups
-	if len(group.Groups) > 0 {
+	if group.HasNodes() {
 		var check errors.ErrorStack
 
 		base = filepath.Join(base, name)
 		if err := os.MkdirAll(base, StoreDirectoryMode); err != nil {
 			check.AppendError(err)
 		} else {
-			for _, sg := range group.Groups {
-				if err = store.writeGroups(base, sg); err != nil {
+			for _, sg := range group.Nodes() {
+				if err = store.writeNodes(base, sg); err != nil {
 					check.AppendError(err)
 				}
 			}

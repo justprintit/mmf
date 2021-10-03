@@ -13,6 +13,7 @@ type User struct {
 
 type Group struct {
 	Id        types.Id
+	Type      string  `yaml:",omitempty"`
 	Name      string  `yaml:",omitempty"`
 	Subgroups []Group `yaml:",omitempty"`
 }
