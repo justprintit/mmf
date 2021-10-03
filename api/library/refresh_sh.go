@@ -212,6 +212,37 @@ func refreshUserSharedGroupCallback(c *Client, ctx context.Context, resp *resty.
 	return nil
 }
 
+// handle first page of TribeSharedGroup
+func refreshTribeSharedGroupCallback(c *Client, ctx context.Context, resp *resty.Response) error {
+	if d := json.TribeSharedGroupResult(resp); d != nil {
+		req := resp.RawResponse.Request
+
+		// process the first page
+		if err := c.refreshTribeSharedGroupFromRequest(ctx, req, d); err != nil {
+			return err
+		}
+
+		// and schedule further pages if needed
+		p := json.ObjectsPages(d)
+		if page, _, ok := p.Next(1); ok {
+			opt := json.NewTribeSharedGroupFromRequest(req)
+
+			for ok {
+				c.SchedulePageRequest(opt, page, func(c *Client, ctx context.Context, resp *resty.Response) error {
+					d := json.TribeSharedGroupResult(resp)
+					req := resp.RawResponse.Request
+
+					return c.refreshTribeSharedGroupFromRequest(ctx, req, d)
+				})
+
+				// next page
+				page, _, ok = p.Next(page)
+			}
+		}
+	}
+	return nil
+}
+
 func (c *Client) scheduleUserSharedLibrary(ctx context.Context, u *types.User) error {
 	select {
 	case <-ctx.Done():
@@ -242,6 +273,25 @@ func (c *Client) scheduleUserSharedGroup(ctx context.Context, u *types.User) err
 
 				req := json.NewUserSharedGroupRequest(g)
 				c.Download(req, refreshUserSharedGroupCallback)
+			}
+		}
+		return nil
+	}
+}
+
+func (c *Client) scheduleTribeSharedGroup(ctx context.Context, u *types.Tribe) error {
+	select {
+	case <-ctx.Done():
+		// cancelled
+		return ctx.Err()
+	default:
+		t := time.Now()
+		for _, g := range u.GroupsAll() {
+			if t.After(g.NextGroupObjectsUpdate) {
+				g.NextGroupObjectsUpdate = t.Add(NextGroupObjectsUpdate)
+
+				req := json.NewTribeSharedGroupRequest(g)
+				c.Download(req, refreshTribeSharedGroupCallback)
 			}
 		}
 		return nil

@@ -50,7 +50,15 @@ func (c *Client) refreshUserSharedLibrary(ctx context.Context, u *types.User, d 
 	return d.Apply(c.library, u)
 }
 
+func (c *Client) refreshTribeSharedGroupFromRequest(ctx context.Context, req *http.Request, d *json.Objects) error {
+	return c.refreshSharedGroupFromRequest(ctx, req, d)
+}
+
 func (c *Client) refreshUserSharedGroupFromRequest(ctx context.Context, req *http.Request, d *json.Objects) error {
+	return c.refreshSharedGroupFromRequest(ctx, req, d)
+}
+
+func (c *Client) refreshSharedGroupFromRequest(ctx context.Context, req *http.Request, d *json.Objects) error {
 	// grab GroupId from Path
 	path := req.URL.Path
 	if id, err := types.GroupIdFromPath(path); err == nil {
@@ -58,7 +66,7 @@ func (c *Client) refreshUserSharedGroupFromRequest(ctx context.Context, req *htt
 		// find Group, and Apply data
 		g, err := c.library.GetGroup(id)
 		if err == nil {
-			err = c.refreshUserSharedGroup(ctx, g, d)
+			err = c.refreshSharedGroup(ctx, g, d)
 		}
 		return err
 	}
@@ -66,7 +74,7 @@ func (c *Client) refreshUserSharedGroupFromRequest(ctx context.Context, req *htt
 	return errors.New("Invalid Path %q", path)
 }
 
-func (c *Client) refreshUserSharedGroup(ctx context.Context, g *types.Group, d *json.Objects) error {
+func (c *Client) refreshSharedGroup(ctx context.Context, g *types.Group, d *json.Objects) error {
 	var check errors.ErrorStack
 
 	for _, obj := range d.Items {
@@ -122,7 +130,9 @@ func (c *Client) refreshTribesLibrary(ctx context.Context, offset int, tribes ..
 	var check errors.ErrorStack
 
 	for _, w := range tribes {
-		if err := w.Apply(c.library); err != nil {
+		if tribe, err := w.Apply(c.library); err != nil {
+			check.AppendError(err)
+		} else if err := c.scheduleTribeSharedGroup(ctx, tribe); err != nil {
 			check.AppendError(err)
 		}
 	}

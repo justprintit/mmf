@@ -10,7 +10,7 @@ import (
 )
 
 // /data-library/group/{id}
-func NewUserSharedGroupRequest(g *types.Group) client.RequestOptions {
+func NewSharedGroupRequest(g *types.Group) client.RequestOptions {
 	opt := SharedLibraryRequest
 	if u := g.User(); u != nil {
 		opt.Referer += fmt.Sprintf("&s=all/%s", url.QueryEscape(u.Id()))
@@ -20,7 +20,7 @@ func NewUserSharedGroupRequest(g *types.Group) client.RequestOptions {
 	return opt
 }
 
-func NewUserSharedGroupFromRequest(req *http.Request) client.RequestOptions {
+func NewSharedGroupFromRequest(req *http.Request) client.RequestOptions {
 	return client.RequestOptions{
 		Accept:  "application/json",
 		Referer: req.Header.Get("Referer"),
@@ -28,4 +28,19 @@ func NewUserSharedGroupFromRequest(req *http.Request) client.RequestOptions {
 		Method:  req.Method,
 		Result:  Objects{},
 	}
+}
+
+func NewUserSharedGroupRequest(g *types.Group) client.RequestOptions {
+	return NewSharedGroupRequest(g)
+}
+
+func NewTribeSharedGroupRequest(g *types.Group) client.RequestOptions {
+	return NewSharedGroupRequest(g)
+}
+func NewUserSharedGroupFromRequest(req *http.Request) client.RequestOptions {
+	return NewSharedGroupFromRequest(req)
+}
+
+func NewTribeSharedGroupFromRequest(req *http.Request) client.RequestOptions {
+	return NewSharedGroupFromRequest(req)
 }

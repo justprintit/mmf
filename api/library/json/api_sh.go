@@ -38,6 +38,14 @@ func UserSharedGroupResult(resp *resty.Response) *Objects {
 	return nil
 }
 
+// TribeSharedGroupResult() pulls a *Objects out of a resty.Response
+func TribeSharedGroupResult(resp *resty.Response) *Objects {
+	if out := resp.Result(); out != nil {
+		return out.(*Objects)
+	}
+	return nil
+}
+
 // UserSharedLibraryResult() pulls a *UserSharedLibrary out of a resty.Response
 func UserSharedLibraryResult(resp *resty.Response) *UserSharedLibrary {
 	if out := resp.Result(); out != nil {

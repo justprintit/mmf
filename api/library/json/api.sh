@@ -24,6 +24,7 @@ EOT
 
 TYPES=
 TYPES="${TYPES:+$TYPES }UserSharedGroup:"
+TYPES="${TYPES:+$TYPES }TribeSharedGroup:"
 TYPES="${TYPES:+$TYPES }UserSharedLibrary"
 TYPES="${TYPES:+$TYPES }PledgesLibrary:"
 TYPES="${TYPES:+$TYPES }PurchasesLibrary:"

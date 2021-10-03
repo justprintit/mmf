@@ -15,6 +15,7 @@ LIBRARIES="${LIBRARIES:+$LIBRARIES }Tribes"
 SUBLIBRARIES=
 SUBLIBRARIES="${SUBLIBRARIES:+$SUBLIBRARIES }UserSharedLibrary"
 SUBLIBRARIES="${SUBLIBRARIES:+$SUBLIBRARIES }UserSharedGroup:"
+SUBLIBRARIES="${SUBLIBRARIES:+$SUBLIBRARIES }TribeSharedGroup:"
 
 # Prelude
 #
@@ -199,6 +200,7 @@ EOT
 
 generate_schedule_l2 UserSharedLibrary "u types.User"
 generate_schedule_l2 UserSharedGroup "u types.User" "g GroupsAll()" "GroupObjects"
+generate_schedule_l2 TribeSharedGroup "u types.Tribe" "g GroupsAll()" "GroupObjects"
 
 if [ -z "$LIBRARIES" ]; then
 	cat <<EOT
