@@ -12,6 +12,7 @@ import (
 	"go.sancus.dev/core/errors"
 
 	"github.com/justprintit/mmf/api"
+	"github.com/justprintit/mmf/web/server"
 )
 
 const DefaultConfigFileMode os.FileMode = 0600 // owner only, because we include the password
@@ -22,7 +23,8 @@ type AuthConfig struct {
 }
 
 type Config struct {
-	Auth AuthConfig
+	Auth   AuthConfig
+	Server server.ServerConfig `yaml:",omitempty"`
 }
 
 func NewConfig() *Config {
