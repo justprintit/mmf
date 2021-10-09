@@ -1,8 +1,17 @@
 package main
 
 import (
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/pkg/browser"
+
 	"go.sancus.dev/config/flags"
 	"go.sancus.dev/config/flags/cobra"
+	"go.sancus.dev/core/errors"
 )
 
 var browseCmd = &cobra.Command{
@@ -11,6 +20,49 @@ var browseCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		flags.GetMapper(cmd.Flags()).Parse()
 		return cfg.Setup()
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		// listen
+		srv, err := cfg.Server.NewServer()
+		if err != nil {
+			return err
+		}
+		done := make(chan error)
+
+		// watch signals
+		go func() {
+			defer close(done)
+
+			sig := make(chan os.Signal, 1)
+			signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+
+			for signum := range sig {
+				switch signum {
+				case syscall.SIGHUP:
+					// ignore
+				case syscall.SIGINT, syscall.SIGTERM:
+					// terminate
+					log.Println("Terminating...")
+					return
+				}
+			}
+		}()
+
+		// launch server
+		go srv.Serve()
+
+		// lauch browser
+		url := srv.URL().String()
+		err = browser.OpenURL(url)
+		if err != nil {
+			err = errors.Wrap(err, "OpenURL: %q", url)
+		} else {
+			// and wait until we are done
+			<-done
+		}
+		srv.Shutdown(context.Background())
+		return err
 	},
 }
 
