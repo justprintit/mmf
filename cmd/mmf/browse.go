@@ -8,8 +8,9 @@ import (
 var browseCmd = &cobra.Command{
 	Use:   "browse",
 	Short: "browse runs a MMF browser",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRunE: func(cmd *cobra.Command, args []string) error {
 		flags.GetMapper(cmd.Flags()).Parse()
+		return cfg.Setup()
 	},
 }
 

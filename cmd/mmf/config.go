@@ -1,9 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
 
@@ -15,7 +19,10 @@ import (
 	"github.com/justprintit/mmf/web/server"
 )
 
-const DefaultConfigFileMode os.FileMode = 0600 // owner only, because we include the password
+const (
+	DefaultConfigFileMode    os.FileMode = 0600 // owner only, because we include the password
+	DefaultDirectoryFileMode             = 0755
+)
 
 type AuthConfig struct {
 	User   api.Credentials `yaml:"user"`
@@ -25,6 +32,9 @@ type AuthConfig struct {
 type Config struct {
 	Auth   AuthConfig
 	Server server.ServerConfig `yaml:",omitempty"`
+
+	Data    string `yaml:"data_dir,omitempty"`
+	Cookies string `yaml:"cookies" default:"cookies.json"`
 }
 
 func NewConfig() *Config {
@@ -43,6 +53,36 @@ func (c *Config) ReadInFile(filename string) error {
 
 func (c *Config) WriteTo(out io.Writer) (int64, error) {
 	return yaml.WriteTo(out, c)
+}
+
+func (c *Config) Setup() error {
+	// data directory
+	c.Data = filepath.Clean(c.Data)
+	if fi, err := os.Stat(c.Data); fi.IsDir() {
+		// ready
+	} else if err == nil {
+		// exists, but not a directory
+		return &os.PathError{
+			Op:   fmt.Sprintf("%T.%s", c, "Setup"),
+			Path: c.Data,
+			Err:  syscall.ENOTDIR,
+		}
+	} else if err = os.MkdirAll(c.Data, DefaultDirectoryFileMode); err != nil {
+		// failed to create
+		return err
+	}
+
+	// CookieJar
+	if len(c.Cookies) == 0 {
+		flags.SetDefaults(c.Cookies)
+	}
+	if strings.IndexRune(c.Cookies, os.PathSeparator) == -1 {
+		// no '/', place it inside `data_dir`
+		c.Cookies = filepath.Join(c.Data, c.Cookies)
+	}
+	c.Cookies = filepath.Clean(c.Cookies)
+
+	return nil
 }
 
 var configCmd = &cobra.Command{
