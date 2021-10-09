@@ -1,5 +1,9 @@
 package transport
 
+import (
+	"net/http"
+)
+
 type ClientOptionFunc func(*Client) error
 
 func (f ClientOptionFunc) Apply(c *Client) error {
@@ -23,4 +27,11 @@ func NewClientWithOptions(options ...ClientOption) (*Client, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+func WithCookieJar(jar http.CookieJar) ClientOptionFunc {
+	return func(c *Client) error {
+		c.Jar = jar
+		return nil
+	}
 }

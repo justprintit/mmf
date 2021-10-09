@@ -7,11 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/juju/persistent-cookiejar"
 	"github.com/pkg/browser"
+	"golang.org/x/net/publicsuffix"
 
 	"go.sancus.dev/config/flags"
 	"go.sancus.dev/config/flags/cobra"
 	"go.sancus.dev/core/errors"
+
+	"github.com/justprintit/mmf/api/transport"
 )
 
 var browseCmd = &cobra.Command{
@@ -22,6 +26,23 @@ var browseCmd = &cobra.Command{
 		return cfg.Setup()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+
+		// cookiejar
+		jar, err := cookiejar.New(&cookiejar.Options{
+			Filename:         cfg.Cookies,
+			PublicSuffixList: publicsuffix.List,
+		})
+		if err != nil {
+			return err
+		}
+
+		// client
+		_, err = transport.NewClientWithOptions(
+			transport.WithCookieJar(jar),
+		)
+		if err != nil {
+			return err
+		}
 
 		// listen
 		srv, err := cfg.Server.NewServer()
