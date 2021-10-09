@@ -1,3 +1,3 @@
-package oapi
+package openapi
 
 //go:generate ./codegen.sh

@@ -1,6 +1,8 @@
 #!/bin/sh
 
-PACKAGE=oapi
+set -eu
+
+: ${GOPACKAGE:=openapi}
 
 OAPI_FILE="../../doc/api-v2.yaml"
 OAPI_CODEGEN_VER="v1.8.3"
@@ -12,9 +14,9 @@ generate() {
 
 	trap "rm -f $f~" EXIT
 
-	set -- -package "$PACKAGE" -generate "$k" $@
+	set -- -package "$GOPACKAGE" -generate "$k" $@
 
-	echo "+ go run \"$OAPI_CODEGEN_URL\" $@ -o \"$f\" \"$OAPI_FILE\"" >&2
+	echo "+ go run \"$OAPI_CODEGEN_URL\" $@ -o $f $OAPI_FILE" >&2
 	go run "$OAPI_CODEGEN_URL" $@ -o "$f~" "$OAPI_FILE"
 
 	if ! diff -u "$f" "$f~"; then
