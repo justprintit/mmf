@@ -1,11 +1,11 @@
-package api
+package mmf
 
 import (
 	"github.com/justprintit/mmf/util"
 )
 
-// Plain Credentials are used by the scrapper, while Client is used by the old oauth2 API
-type Credentials struct {
+// Plain User credentials are used by the scrapper, while Client is used by the old oauth2 API
+type User struct {
 	Username string
 	Password string
 }

@@ -15,7 +15,7 @@ import (
 	"go.sancus.dev/config/yaml"
 	"go.sancus.dev/core/errors"
 
-	"github.com/justprintit/mmf/api"
+	"github.com/justprintit/mmf/api/mmf"
 	"github.com/justprintit/mmf/web/server"
 )
 
@@ -25,8 +25,8 @@ const (
 )
 
 type AuthConfig struct {
-	User   api.Credentials `yaml:"user"`
-	Client api.Client      `yaml:"api"`
+	User   mmf.User   `yaml:"user"`
+	Client mmf.Client `yaml:"api"`
 }
 
 type Config struct {
