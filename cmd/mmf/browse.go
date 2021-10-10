@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/juju/persistent-cookiejar"
+	"github.com/motemen/go-loghttp"
 	"github.com/pkg/browser"
 	"golang.org/x/net/publicsuffix"
 
@@ -38,6 +39,7 @@ var browseCmd = &cobra.Command{
 
 		// client
 		_, err = transport.NewClientWithOptions(
+			transport.WithTransport(&loghttp.Transport{}),
 			transport.WithCookieJar(jar),
 		)
 		if err != nil {

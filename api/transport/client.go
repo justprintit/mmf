@@ -12,8 +12,9 @@ const (
 )
 
 type Client struct {
-	Server string
-	Jar    http.CookieJar
+	Server    string
+	Jar       http.CookieJar
+	Transport http.RoundTripper
 }
 
 func (c *Client) SetDefaults() error {

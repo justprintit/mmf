@@ -29,6 +29,13 @@ func NewClientWithOptions(options ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
+func WithTransport(rt http.RoundTripper) ClientOptionFunc {
+	return func(c *Client) error {
+		c.Transport = rt
+		return nil
+	}
+}
+
 func WithCookieJar(jar http.CookieJar) ClientOptionFunc {
 	return func(c *Client) error {
 		c.Jar = jar
