@@ -1,4 +1,4 @@
-package auth
+package mmf
 
 import (
 	"golang.org/x/oauth2"
