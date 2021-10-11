@@ -47,7 +47,7 @@ var browseCmd = &cobra.Command{
 		}
 
 		// listen
-		srv, err := cfg.Server.NewServer()
+		srv, err := cfg.Server.NewServer(nil)
 		if err != nil {
 			return err
 		}

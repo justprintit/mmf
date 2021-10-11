@@ -15,12 +15,11 @@ type ServerConfig struct {
 
 type Server struct {
 	http.Server
-	*http.ServeMux
 
 	listener net.Listener
 }
 
-func (sc ServerConfig) NewServer() (*Server, error) {
+func (sc ServerConfig) NewServer(mux http.Handler) (*Server, error) {
 
 	// Listener
 	var addr string
@@ -37,11 +36,12 @@ func (sc ServerConfig) NewServer() (*Server, error) {
 	}
 
 	// Dispatcher
-	mux := http.NewServeMux()
+	if mux == nil {
+		mux = http.NotFoundHandler()
+	}
 
 	// Server
 	s := &Server{
-		ServeMux: mux,
 		Server: http.Server{
 			Addr:    listener.Addr().String(),
 			Handler: mux,
