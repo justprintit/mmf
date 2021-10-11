@@ -15,6 +15,9 @@ type Client struct {
 	Server    string
 	Jar       http.CookieJar
 	Transport http.RoundTripper
+
+	done1 chan struct{}
+	done2 chan struct{}
 }
 
 func (c *Client) SetDefaults() error {
@@ -36,4 +39,20 @@ func (c *Client) SetDefaults() error {
 	}
 
 	return nil
+}
+
+func (c *Client) Run() {
+	c.done1 = make(chan struct{})
+	c.done2 = make(chan struct{})
+
+	defer close(c.done2)
+	<-c.done1
+}
+
+func (c *Client) Abort() {
+	close(c.done1)
+}
+
+func (c *Client) Wait() {
+	<-c.done2
 }
