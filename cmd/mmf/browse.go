@@ -1,22 +1,16 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/juju/persistent-cookiejar"
-	"github.com/motemen/go-loghttp"
 	"github.com/pkg/browser"
-	"golang.org/x/net/publicsuffix"
 
 	"go.sancus.dev/config/flags"
 	"go.sancus.dev/config/flags/cobra"
 	"go.sancus.dev/core/errors"
-
-	"github.com/justprintit/mmf/api/transport"
 )
 
 var browseCmd = &cobra.Command{
@@ -28,35 +22,13 @@ var browseCmd = &cobra.Command{
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		// cookiejar
-		jar, err := cookiejar.New(&cookiejar.Options{
-			Filename:         cfg.Cookies,
-			PublicSuffixList: publicsuffix.List,
-		})
+		app, err := NewApp(*cfg, cfgFile)
 		if err != nil {
 			return err
 		}
-
-		// client
-		_, err = transport.NewClientWithOptions(
-			transport.WithTransport(&loghttp.Transport{}),
-			transport.WithCookieJar(jar),
-		)
-		if err != nil {
-			return err
-		}
-
-		// listen
-		srv, err := cfg.Server.NewServer(nil)
-		if err != nil {
-			return err
-		}
-		done := make(chan error)
 
 		// watch signals
 		go func() {
-			defer close(done)
-
 			sig := make(chan os.Signal, 1)
 			signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
@@ -67,24 +39,25 @@ var browseCmd = &cobra.Command{
 				case syscall.SIGINT, syscall.SIGTERM:
 					// terminate
 					log.Println("Terminating...")
+					app.Abort()
 					return
 				}
 			}
 		}()
 
-		// launch server
-		go srv.Serve()
+		// launch app
+		go app.Run()
 
 		// lauch browser
-		url := srv.URL().String()
+		url := app.URL()
 		err = browser.OpenURL(url)
 		if err != nil {
 			err = errors.Wrap(err, "OpenURL: %q", url)
-		} else {
-			// and wait until we are done
-			<-done
+			app.Abort()
 		}
-		srv.Shutdown(context.Background())
+
+		// and wait until we are done
+		app.Wait()
 		return err
 	},
 }
