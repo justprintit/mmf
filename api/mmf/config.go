@@ -34,7 +34,7 @@ func (c *Client) Ok() bool {
 }
 
 // NewOauth2 creates a new oauth2.Config for use MMF's OpenAPI
-func (c *Client) NewOauth2(callback string) (*oauth2.Config, error) {
+func (c *Client) NewOauth2(callback string, scopes ...string) (*oauth2.Config, error) {
 	var (
 		id     string
 		secret string
@@ -62,6 +62,7 @@ func (c *Client) NewOauth2(callback string) (*oauth2.Config, error) {
 		ClientID:     id,
 		ClientSecret: secret,
 		Endpoint:     Endpoint,
+		Scopes:       scopes,
 	}
 
 	return cfg, nil
