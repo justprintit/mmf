@@ -25,6 +25,16 @@ type Client struct {
 	RefreshToken string `yaml:"refresh_token,omitempty"`
 }
 
+func (c *Client) Token() *oauth2.Token {
+	if len(c.AccessToken) > 0 {
+		return &oauth2.Token{
+			AccessToken:  c.AccessToken,
+			RefreshToken: c.RefreshToken,
+		}
+	}
+	return nil
+}
+
 // Ok() checks if the Client can be used to compose an oauth2.Config
 func (c *Client) Ok() bool {
 	if len(c.ClientID) > 0 && len(c.ClientSecret) > 0 {
