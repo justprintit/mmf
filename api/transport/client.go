@@ -32,6 +32,8 @@ type Client struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
+	events ClientEvents
+
 	done1 chan struct{}
 	done2 chan struct{}
 }

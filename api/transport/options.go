@@ -50,3 +50,10 @@ func WithUser(cred mmf.User) ClientOptionFunc {
 		return nil
 	}
 }
+
+func WithCallbacks(ev ClientEvents) ClientOptionFunc {
+	return func(c *Client) error {
+		c.events = ev
+		return nil
+	}
+}

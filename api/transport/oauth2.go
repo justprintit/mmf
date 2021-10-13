@@ -101,7 +101,7 @@ func (c *Client) setToken(token *oauth2.Token, refresh bool) error {
 			c.client.RefreshToken = token.RefreshToken
 		}
 
-		return nil
+		return c.onNewToken(token)
 	}
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/juju/persistent-cookiejar"
@@ -45,6 +46,21 @@ func (m *App) ErrorHandler(rw http.ResponseWriter, req *http.Request, err error)
 
 func (m *App) URL() string {
 	return fmt.Sprintf("http://%s/", m.server.Addr)
+}
+
+func (m *App) onNewCredentials(user, password string) error {
+	log.Printf("%#+v: user:%q password:%q", errors.Here(), user, password)
+	return nil
+}
+
+func (m *App) onNewClient(key, secret string) error {
+	log.Printf("%#+v: key:%q secret:%q", errors.Here(), key, secret)
+	return nil
+}
+
+func (m *App) onNewToken(access, renew string) error {
+	log.Printf("%#+v: access:%q renew:%q", errors.Here(), access, renew)
+	return nil
 }
 
 func (m *App) Run() {
@@ -107,6 +123,11 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 		transport.WithCookieJar(jar),
 		transport.WithUser(cfg.Auth.User),
 		transport.WithOauth2(cfg.Auth.Client, srv.URL().String(), CallbackPath),
+		transport.WithCallbacks(transport.ClientEvents{
+			OnNewCredentials: m.onNewCredentials,
+			OnNewClient:      m.onNewClient,
+			OnNewToken:       m.onNewToken,
+		}),
 	)
 
 	if err != nil {
