@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"net/http"
 	"net/http/cookiejar"
 
@@ -20,6 +21,10 @@ type Client struct {
 
 	// scrap
 	credentials mmf.User
+
+	// cancel
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	done1 chan struct{}
 	done2 chan struct{}
@@ -41,6 +46,23 @@ func (c *Client) SetDefaults() error {
 			return err
 		}
 		c.Jar = jar
+	}
+
+	// cancelation
+	if c.cancel == nil {
+		var (
+			ctx    context.Context
+			cancel context.CancelFunc
+		)
+
+		// preserve context if present
+		if ctx = c.ctx; ctx == nil {
+			ctx = context.Background()
+		}
+
+		ctx, cancel = context.WithCancel(ctx)
+		c.ctx = ctx
+		c.cancel = cancel
 	}
 
 	return nil
