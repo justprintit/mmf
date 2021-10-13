@@ -21,6 +21,9 @@ type Client struct {
 
 	// scrap
 	credentials mmf.User
+	// oauth2
+	callback string
+	client   mmf.Client
 
 	// cancel
 	ctx    context.Context

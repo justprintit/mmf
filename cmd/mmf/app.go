@@ -13,6 +13,10 @@ import (
 	"github.com/justprintit/mmf/web/server"
 )
 
+const (
+	CallbackPath = "/oauth2/callback"
+)
+
 type App struct {
 	config     Config
 	configFile string
@@ -93,6 +97,7 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 		transport.WithTransport(rt),
 		transport.WithCookieJar(jar),
 		transport.WithUser(cfg.Auth.User),
+		transport.WithOauth2(cfg.Auth.Client, srv.URL().String(), CallbackPath),
 	)
 
 	if err != nil {
