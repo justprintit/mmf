@@ -35,7 +35,9 @@ var browseCmd = &cobra.Command{
 			for signum := range sig {
 				switch signum {
 				case syscall.SIGHUP:
-					// ignore
+					if err := app.Reload(); err != nil {
+						log.Println("Reload failed: %s", err)
+					}
 				case syscall.SIGINT, syscall.SIGTERM:
 					// terminate
 					log.Println("Terminating...")

@@ -49,6 +49,10 @@ func (m *App) Wait() {
 	m.server.Shutdown(context.Background())
 }
 
+func (m *App) Reload() error {
+	return nil
+}
+
 func (m *App) Abort() {
 	m.worker.Abort()
 }
