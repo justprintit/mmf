@@ -6,6 +6,7 @@ import (
 	"net/http/cookiejar"
 
 	"golang.org/x/net/publicsuffix"
+	"golang.org/x/oauth2"
 
 	"github.com/justprintit/mmf/api/mmf"
 )
@@ -24,6 +25,8 @@ type Client struct {
 	// oauth2
 	callback string
 	client   mmf.Client
+	oauth2   *oauth2.Config
+	ts       oauth2.TokenSource
 
 	// cancel
 	ctx    context.Context
@@ -66,6 +69,13 @@ func (c *Client) SetDefaults() error {
 		ctx, cancel = context.WithCancel(ctx)
 		c.ctx = ctx
 		c.cancel = cancel
+	}
+
+	// oauth2
+	if c.oauth2 == nil {
+		if err := c.setOauth2(); err != nil {
+			return err
+		}
 	}
 
 	return nil

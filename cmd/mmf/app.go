@@ -9,15 +9,21 @@ import (
 	"github.com/motemen/go-loghttp"
 	"golang.org/x/net/publicsuffix"
 
+	"go.sancus.dev/web/errors"
+	"go.sancus.dev/web/router"
+
 	"github.com/justprintit/mmf/api/transport"
 	"github.com/justprintit/mmf/web/server"
 )
 
 const (
+	RedirectPath = "/oauth2"
 	CallbackPath = "/oauth2/callback"
 )
 
 type App struct {
+	http.Handler
+
 	config     Config
 	configFile string
 
@@ -31,6 +37,10 @@ func (m *App) LogRequest(req *http.Request) {
 
 func (m *App) LogResponse(resp *http.Response) {
 	loghttp.DefaultLogResponse(resp)
+}
+
+func (m *App) ErrorHandler(rw http.ResponseWriter, req *http.Request, err error) {
+	errors.HandleError(rw, req, err)
 }
 
 func (m *App) URL() string {
@@ -61,10 +71,6 @@ func (m *App) Abort() {
 	m.worker.Abort()
 }
 
-func (m *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	http.NotFound(rw, req)
-}
-
 func NewApp(cfg Config, cfgFile string) (*App, error) {
 
 	m := &App{
@@ -87,6 +93,9 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 		return nil, err
 	}
 
+	// router
+	r := router.NewRouter(m.ErrorHandler)
+
 	// worker
 	rt := &loghttp.Transport{
 		LogRequest:  m.LogRequest,
@@ -105,7 +114,12 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 		return nil, err
 	}
 
-	m.server = srv
-	m.worker = mmf
+	// oauth2
+	r.TryHandleFunc(RedirectPath, mmf.RedirectHandler)
+	r.TryHandleFunc(CallbackPath, mmf.CallbackHandler)
+
+	m.worker = mmf // mmf client
+	m.server = srv // http server
+	m.Handler = r  // router
 	return m, nil
 }
