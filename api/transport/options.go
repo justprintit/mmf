@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"github.com/justprintit/mmf/api/mmf"
 	"net/http"
 )
 
@@ -39,6 +40,13 @@ func WithTransport(rt http.RoundTripper) ClientOptionFunc {
 func WithCookieJar(jar http.CookieJar) ClientOptionFunc {
 	return func(c *Client) error {
 		c.Jar = jar
+		return nil
+	}
+}
+
+func WithUser(cred mmf.User) ClientOptionFunc {
+	return func(c *Client) error {
+		c.credentials = cred
 		return nil
 	}
 }

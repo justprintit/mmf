@@ -5,6 +5,8 @@ import (
 	"net/http/cookiejar"
 
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/justprintit/mmf/api/mmf"
 )
 
 const (
@@ -15,6 +17,9 @@ type Client struct {
 	Server    string
 	Jar       http.CookieJar
 	Transport http.RoundTripper
+
+	// scrap
+	credentials mmf.User
 
 	done1 chan struct{}
 	done2 chan struct{}

@@ -92,6 +92,7 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 	mmf, err := transport.NewClientWithOptions(
 		transport.WithTransport(rt),
 		transport.WithCookieJar(jar),
+		transport.WithUser(cfg.Auth.User),
 	)
 
 	if err != nil {
