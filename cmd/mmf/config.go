@@ -55,6 +55,10 @@ func (c *Config) WriteTo(out io.Writer) (int64, error) {
 	return yaml.WriteTo(out, c)
 }
 
+func (c *Config) WriteFile(filename string) (int64, error) {
+	return yaml.WriteFile(filename, c, DefaultConfigFileMode)
+}
+
 func (c *Config) Setup() error {
 	// data directory
 	c.Data = filepath.Clean(c.Data)

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"sync"
 
 	"github.com/juju/persistent-cookiejar"
 	"github.com/motemen/go-loghttp"
@@ -28,6 +30,7 @@ type App struct {
 	config     Config
 	configFile string
 
+	mu     sync.Mutex
 	server *server.Server
 	worker *transport.Client
 }
@@ -48,18 +51,66 @@ func (m *App) URL() string {
 	return fmt.Sprintf("http://%s/", m.server.Addr)
 }
 
+func (m *App) updateConfig(v *string, after string, s string, args ...interface{}) bool {
+	before := *v
+	if before != after {
+		if len(args) > 0 {
+			s = fmt.Sprintf(s, args...)
+		}
+		if len(before) > 0 {
+			log.Printf("%c %s: %q", '-', s, before)
+		}
+		log.Printf("%c %s: %q", '+', s, after)
+		*v = after
+		return true
+	}
+	return false
+}
+
+func (m *App) save() error {
+	var err error
+
+	if m.configFile == "" {
+		_, err = m.config.WriteTo(os.Stdout)
+	} else {
+		_, err = m.config.WriteFile(m.configFile)
+	}
+	return err
+}
+
 func (m *App) onNewCredentials(user, password string) error {
-	log.Printf("%#+v: user:%q password:%q", errors.Here(), user, password)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	f1 := m.updateConfig(&m.config.Auth.User.Username, user, "%s.%s.%s", "auth", "user", "username")
+	f2 := m.updateConfig(&m.config.Auth.User.Password, password, "%s.%s.%s", "auth", "user", "password")
+	if f1 || f2 {
+		return m.save()
+	}
 	return nil
 }
 
 func (m *App) onNewClient(key, secret string) error {
-	log.Printf("%#+v: key:%q secret:%q", errors.Here(), key, secret)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	f1 := m.updateConfig(&m.config.Auth.Client.ClientID, key, "%s.%s.%s", "auth", "api", "client_key")
+	f2 := m.updateConfig(&m.config.Auth.Client.ClientSecret, secret, "%s.%s.%s", "auth", "api", "client_secret")
+	if f1 || f2 {
+		return m.save()
+	}
 	return nil
 }
 
 func (m *App) onNewToken(access, renew string) error {
-	log.Printf("%#+v: access:%q renew:%q", errors.Here(), access, renew)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	f1 := m.updateConfig(&m.config.Auth.Client.AccessToken, access, "%s.%s.%s", "auth", "api", "access_token")
+	f2 := m.updateConfig(&m.config.Auth.Client.RefreshToken, renew, "%s.%s.%s", "auth", "api", "refresh_token")
+	if f1 || f2 {
+		return m.save()
+	}
 	return nil
 }
 
