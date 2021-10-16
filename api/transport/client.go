@@ -12,6 +12,11 @@ import (
 )
 
 const (
+	SequentialQueue QueueIndex = iota
+	DownloadQueue
+
+	QueuesCount int = iota
+
 	DefaultServer = "https://www.myminifactory.com/"
 )
 
@@ -53,7 +58,7 @@ func (c *Client) SetDefaults() error {
 
 	// queue
 	if c.wq.Len() == 0 {
-		c.wq.Init(c, 2)
+		c.wq.Init(c, QueuesCount)
 	}
 
 	// oauth2
@@ -84,4 +89,12 @@ func (c *Client) Cancel() {
 
 func (c *Client) Wait() {
 	c.wq.Wait()
+}
+
+func (c *Client) Schedule(f QueueFunc, v interface{}) {
+	c.wq.Add(SequentialQueue, f, v)
+}
+
+func (c *Client) ScheduleDownloader(f QueueFunc, v interface{}) {
+	c.wq.Add(DownloadQueue, f, v)
 }

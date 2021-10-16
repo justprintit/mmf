@@ -9,7 +9,14 @@ import (
 	"go.sancus.dev/core/queue"
 )
 
-type Task func(c *Client, ctx context.Context) error
+type QueueIndex uint
+
+type QueueFunc func(c *Client, ctx context.Context, data interface{}) error
+
+type QueueEntry struct {
+	fn   QueueFunc
+	data interface{}
+}
 
 type WorkQueue struct {
 	sync.Mutex
@@ -96,11 +103,11 @@ func (wq *WorkQueue) run(q *Queue) {
 		if v, ok := q.Pop(); !ok {
 			// empty
 			break
-		} else if f, ok := v.(Task); !ok {
+		} else if qe, ok := v.(QueueEntry); !ok {
 			// wtf? ignore
-		} else if err := f(wq.c, wq.ctx); err != nil {
+		} else if err := qe.fn(wq.c, wq.ctx, qe.data); err != nil {
 			// abort
-			log.Printf("Fatal: %v: %s", f, err)
+			log.Printf("Fatal: %v: %s", qe.fn, err)
 			wq.Cancel()
 			break
 		}
@@ -133,21 +140,21 @@ func (wq *WorkQueue) poke() {
 }
 
 // Adds a Task to a queue
-func (wq *WorkQueue) Add(i int, f Task) {
+func (wq *WorkQueue) Add(i QueueIndex, f QueueFunc, data interface{}) {
 	if f != nil {
-		wq.q[i].Push(f)
+		wq.q[i].Push(QueueEntry{f, data})
 		wq.Poke()
 	}
 }
 
 // Runs a Task on its own goroutine
-func (wq *WorkQueue) Go(f Task) {
+func (wq *WorkQueue) Go(f QueueFunc, data interface{}) {
 	if f != nil {
 		wq.wg.Add(1)
 
 		go func() {
 			defer wq.wg.Done()
-			f(wq.c, wq.ctx)
+			f(wq.c, wq.ctx, data)
 		}()
 	}
 }
