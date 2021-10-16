@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
+	"path"
 
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
@@ -18,6 +20,7 @@ const (
 	QueuesCount int = iota
 
 	DefaultServer = "https://www.myminifactory.com/"
+	ApiPath       = "/api/v2"
 )
 
 type Client struct {
@@ -69,6 +72,20 @@ func (c *Client) SetDefaults() error {
 	}
 
 	return nil
+}
+
+func (c *Client) OpenAPIServer() string {
+	u, err := url.Parse(c.Server)
+	if err != nil {
+		panic(err)
+	}
+	if u.Path == "" {
+		u.Path = ApiPath
+	} else {
+		u.Path = path.Clean(path.Join(u.Path, ApiPath))
+	}
+
+	return u.String()
 }
 
 func (c *Client) Context() context.Context {
