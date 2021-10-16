@@ -15,6 +15,7 @@ import (
 	"go.sancus.dev/web/errors"
 	"go.sancus.dev/web/router"
 
+	"github.com/justprintit/mmf/api/library"
 	"github.com/justprintit/mmf/api/transport"
 	"github.com/justprintit/mmf/web/server"
 )
@@ -34,7 +35,7 @@ type App struct {
 
 	mu     sync.Mutex
 	server *server.Server
-	worker *transport.Client
+	worker *library.Worker
 }
 
 func (m *App) LogRequest(req *http.Request) {
@@ -120,6 +121,9 @@ func (m *App) Run() {
 	// launch server
 	go m.server.Serve()
 
+	// schedule some work
+	go m.worker.Refresh()
+
 	// and run the worker
 	m.worker.Run(nil, DownloadThreads)
 }
@@ -133,7 +137,7 @@ func (m *App) Wait() {
 }
 
 func (m *App) Reload() error {
-	return nil
+	return m.worker.Refresh()
 }
 
 func (m *App) Abort() {
@@ -182,18 +186,20 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 			OnNewToken:       m.onNewToken,
 		}),
 	)
-
 	if err != nil {
 		defer srv.Close()
 		return nil, err
 	}
 
+	w := library.NewWorker(mmf, nil)
+
 	// oauth2
 	r.TryHandleFunc(RedirectPath, mmf.RedirectHandler)
 	r.TryHandleFunc(CallbackPath, mmf.CallbackHandler)
 
-	m.worker = mmf // mmf client
+	m.worker = w   // mmf client
 	m.server = srv // http server
 	m.Handler = r  // router
+
 	return m, nil
 }
