@@ -68,11 +68,7 @@ func (c *Client) setToken(token *oauth2.Token, refresh bool) error {
 		return nil
 	}
 
-	ctx := c.ctx
-	if ctx == nil {
-		// Client hasn't been properly initialised yet
-		ctx = context.Background()
-	}
+	ctx := c.Context()
 
 	if refresh {
 		// token is incomplete, refresh it right away

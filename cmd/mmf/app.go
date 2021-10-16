@@ -22,6 +22,8 @@ import (
 const (
 	RedirectPath = "/oauth2"
 	CallbackPath = "/oauth2/callback"
+
+	DownloadThreads = 3
 )
 
 type App struct {
@@ -119,7 +121,7 @@ func (m *App) Run() {
 	go m.server.Serve()
 
 	// and run the worker
-	m.worker.Run()
+	m.worker.Run(nil, DownloadThreads)
 }
 
 func (m *App) Wait() {
@@ -135,7 +137,7 @@ func (m *App) Reload() error {
 }
 
 func (m *App) Abort() {
-	m.worker.Abort()
+	m.worker.Cancel()
 }
 
 func NewApp(cfg Config, cfgFile string) (*App, error) {
