@@ -1,15 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/juju/persistent-cookiejar"
 	"github.com/motemen/go-loghttp"
+	"github.com/tidwall/pretty"
 	"golang.org/x/net/publicsuffix"
 
 	"go.sancus.dev/web/errors"
@@ -30,8 +36,9 @@ const (
 type App struct {
 	http.Handler
 
-	config     Config
-	configFile string
+	config        Config
+	configFile    string
+	dumpTransport io.Writer
 
 	mu     sync.Mutex
 	server *server.Server
@@ -40,10 +47,43 @@ type App struct {
 
 func (m *App) LogRequest(req *http.Request) {
 	loghttp.DefaultLogRequest(req)
+
+	if out := m.dumpTransport; out == nil {
+		//
+	} else if b, err := httputil.DumpRequest(req, true); err == nil {
+		out.Write(b)
+		out.Write([]byte{'\n', '\n'})
+	} else {
+		log.Println(err)
+	}
 }
 
 func (m *App) LogResponse(resp *http.Response) {
 	loghttp.DefaultLogResponse(resp)
+
+	if out := m.dumpTransport; out != nil {
+		var json bool
+
+		switch {
+		case strings.Contains(resp.Header.Get("Content-Type"), "json"):
+			json = true
+		}
+
+		if b, err := httputil.DumpResponse(resp, !json); err == nil {
+			out.Write(b)
+			if json {
+				// read and unread
+				body, _ := ioutil.ReadAll(resp.Body)
+				resp.Body.Close()
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+				out.Write(pretty.Pretty(body))
+			}
+			out.Write([]byte{'\n', '\n'})
+		} else {
+			log.Println(err)
+		}
+	}
 }
 
 func (m *App) ErrorHandler(rw http.ResponseWriter, req *http.Request, err error) {
