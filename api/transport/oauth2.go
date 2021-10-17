@@ -165,3 +165,17 @@ func (c *Client) Token() (*oauth2.Token, error) {
 	}
 	return t, err
 }
+
+// Do makes a request using the oauth2 token
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
+
+	rt := &http.Client{
+		Transport: &oauth2.Transport{
+			Source: c,
+			Base:   c.Transport,
+		},
+		Jar: c.Jar,
+	}
+
+	return rt.Do(req.WithContext(c.Context()))
+}
