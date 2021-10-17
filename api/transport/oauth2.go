@@ -156,3 +156,12 @@ func (c *Client) CallbackHandler(rw http.ResponseWriter, req *http.Request) erro
 
 	return c.setTokenSource(token, false)
 }
+
+// Token() lets us implement oauth2.TokenSource and capture token updates
+func (c *Client) Token() (*oauth2.Token, error) {
+	t, err := c.ts.Token()
+	if err == nil {
+		err = c.rememberToken(t)
+	}
+	return t, err
+}
