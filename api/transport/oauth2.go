@@ -54,14 +54,14 @@ func (c *Client) setOauth2() error {
 		c.oauth2 = oc
 
 		// TokenSource
-		return c.setToken(c.client.Token(), true)
+		return c.setTokenSource(c.client.Token(), true)
 	} else {
 		c.oauth2 = nil
-		return c.setToken(nil, false)
+		return c.setTokenSource(nil, false)
 	}
 }
 
-func (c *Client) setToken(token *oauth2.Token, refresh bool) error {
+func (c *Client) setTokenSource(token *oauth2.Token, refresh bool) error {
 	if token == nil {
 		// no token
 		c.ts = nil
@@ -80,25 +80,31 @@ func (c *Client) setToken(token *oauth2.Token, refresh bool) error {
 			return err
 		} else {
 			// and allocate TokenSource
-			return c.setToken(token, false)
+			return c.setTokenSource(token, false)
 		}
 	} else {
 		// allocate TokenSource
 		c.ts = c.oauth2.TokenSource(ctx, token)
+		return c.rememberToken(token)
+	}
+}
 
+func (c *Client) rememberToken(token *oauth2.Token) error {
+
+	if len(token.RefreshToken) == 0 {
+		token.RefreshToken = c.client.RefreshToken
+	}
+
+	if token.AccessToken != c.client.AccessToken ||
+		token.RefreshToken != c.client.RefreshToken {
 		// and remember new Token if needed
-		if len(token.RefreshToken) == 0 {
-			token.RefreshToken = c.client.RefreshToken
-		}
 
-		if token.AccessToken != c.client.AccessToken ||
-			token.RefreshToken != c.client.RefreshToken {
-			c.client.AccessToken = token.AccessToken
-			c.client.RefreshToken = token.RefreshToken
-		}
-
+		c.client.AccessToken = token.AccessToken
+		c.client.RefreshToken = token.RefreshToken
 		return c.onNewToken(token)
 	}
+
+	return nil
 }
 
 func (c *Client) RedirectHandler(rw http.ResponseWriter, req *http.Request) error {
@@ -148,5 +154,5 @@ func (c *Client) CallbackHandler(rw http.ResponseWriter, req *http.Request) erro
 		return errors.AsInvalidArgumentError(err, "code")
 	}
 
-	return c.setToken(token, false)
+	return c.setTokenSource(token, false)
 }
