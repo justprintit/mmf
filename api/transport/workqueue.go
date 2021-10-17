@@ -99,7 +99,7 @@ func (wq *WorkQueue) Start(ctx context.Context, limits ...int32) {
 }
 
 func (wq *WorkQueue) run(q *Queue) {
-	for !wq.running {
+	for wq.running {
 		if v, ok := q.Pop(); !ok {
 			// empty
 			break
