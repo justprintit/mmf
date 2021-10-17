@@ -307,10 +307,10 @@ type ObjectId float32
 type Order string
 
 // Page defines model for page.
-type Page string
+type Page int
 
 // PerPage defines model for per_page.
-type PerPage string
+type PerPage int
 
 // Q defines model for q.
 type Q string

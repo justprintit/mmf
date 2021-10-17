@@ -554,14 +554,14 @@ components:
       required: false
       description: Page number. Default is 1
       schema:
-        type: string
+        type: integer
     per_page:
       name: per_page
       in: query
       required: false
       description: Number of results per page. Default is 20
       schema:
-        type: string
+        type: integer
     sort:
       name: sort
       in: query
