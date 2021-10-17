@@ -38,6 +38,10 @@ func WithOauth2(cred mmf.Client, base string, callback string) ClientOptionFunc 
 	}
 }
 
+func (c *Client) resetOauth2() {
+	c.setTokenSource(nil, false)
+}
+
 func (c *Client) setOauth2() error {
 	if len(c.callback) > 0 && c.client.Ok() {
 		// *oauth2.Config
@@ -65,7 +69,7 @@ func (c *Client) setTokenSource(token *oauth2.Token, refresh bool) error {
 	if token == nil {
 		// no token
 		c.ts = nil
-		return nil
+		return c.rememberToken(nil)
 	}
 
 	ctx := c.Context()
@@ -90,6 +94,13 @@ func (c *Client) setTokenSource(token *oauth2.Token, refresh bool) error {
 }
 
 func (c *Client) rememberToken(token *oauth2.Token) error {
+
+	if token == nil {
+		// forget
+		c.client.AccessToken = ""
+		c.client.RefreshToken = ""
+		return c.onNewToken(nil)
+	}
 
 	if len(token.RefreshToken) == 0 {
 		token.RefreshToken = c.client.RefreshToken
@@ -177,5 +188,12 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		Jar: c.Jar,
 	}
 
-	return rt.Do(req.WithContext(c.Context()))
+	resp, err := rt.Do(req.WithContext(c.Context()))
+	if err == nil {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			c.resetOauth2()
+		}
+	}
+	return resp, err
 }
