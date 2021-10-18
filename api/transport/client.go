@@ -87,8 +87,16 @@ func (c *Client) Cancel() {
 	c.wq.Cancel()
 }
 
+func (c *Client) Done() <-chan struct{} {
+	return c.wq.Done()
+}
+
 func (c *Client) Wait() {
 	c.wq.Wait()
+}
+
+func (c *Client) State() WorkQueueState {
+	return c.wq.State()
 }
 
 func (c *Client) Schedule(f QueueFunc, v interface{}) {

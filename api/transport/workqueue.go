@@ -18,10 +18,19 @@ type QueueEntry struct {
 	data interface{}
 }
 
+type WorkQueueState int
+
+const (
+	WorkQueueStarting WorkQueueState = iota
+	WorkQueuePaused
+	WorkQueueRunning
+	WorkQueueTerminating
+)
+
 type WorkQueue struct {
 	sync.Mutex
 
-	running bool
+	state atomic.Value
 
 	// work
 	c  *Client
@@ -33,6 +42,24 @@ type WorkQueue struct {
 	cancel context.CancelFunc
 	once   sync.Once
 	done   chan struct{}
+}
+
+func (wq *WorkQueue) setState(s WorkQueueState) {
+	wq.Lock()
+	defer wq.Unlock()
+
+	wq.state.Store(s)
+}
+
+func (wq *WorkQueue) State() WorkQueueState {
+	if v := wq.state.Load(); v != nil {
+		return v.(WorkQueueState)
+	}
+	return WorkQueueStarting
+}
+
+func (wq *WorkQueue) running() bool {
+	return wq.State() == WorkQueueRunning
 }
 
 func (wq *WorkQueue) Len() int {
@@ -81,7 +108,7 @@ func (wq *WorkQueue) Start(ctx context.Context, limits ...int32) {
 
 	wq.ctx, wq.cancel = context.WithCancel(ctx)
 	wq.done = make(chan struct{})
-	wq.running = true
+	wq.state.Store(WorkQueueStarting)
 
 	// watcher
 	go func() {
@@ -90,7 +117,7 @@ func (wq *WorkQueue) Start(ctx context.Context, limits ...int32) {
 		// wait for cancellation
 		select {
 		case <-wq.ctx.Done():
-			wq.running = false
+			wq.setState(WorkQueueTerminating)
 		}
 
 		// and wait for workers
@@ -99,7 +126,7 @@ func (wq *WorkQueue) Start(ctx context.Context, limits ...int32) {
 }
 
 func (wq *WorkQueue) run(q *Queue) {
-	for wq.running {
+	for wq.running() {
 		if v, ok := q.Pop(); !ok {
 			// empty
 			break
@@ -116,7 +143,7 @@ func (wq *WorkQueue) run(q *Queue) {
 
 // Poke() wakes workers if they are needed
 func (wq *WorkQueue) Poke() {
-	if wq.running {
+	if wq.running() {
 		wq.Lock()
 		defer wq.Unlock()
 
