@@ -178,7 +178,7 @@ func (c *Client) Token() (*oauth2.Token, error) {
 }
 
 // Do makes a request using the oauth2 token
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
+func (c *Client) NewOauth2Doer() HttpRequestDoerFunc {
 
 	rt := &http.Client{
 		Transport: &oauth2.Transport{
@@ -188,12 +188,16 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		Jar: c.Jar,
 	}
 
-	resp, err := rt.Do(req.WithContext(c.Context()))
-	if err == nil {
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			c.resetOauth2()
+	fn := func(req *http.Request) (*http.Response, error) {
+		resp, err := rt.Do(req.WithContext(c.Context()))
+		if err == nil {
+			switch resp.StatusCode {
+			case http.StatusUnauthorized:
+				c.resetOauth2()
+			}
 		}
+		return resp, err
 	}
-	return resp, err
+
+	return fn
 }
