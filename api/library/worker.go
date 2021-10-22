@@ -2,6 +2,8 @@ package library
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/justprintit/mmf/api/library/store"
 	"github.com/justprintit/mmf/api/openapi"
@@ -17,8 +19,10 @@ type OpenAPIClient struct {
 type Worker struct {
 	*transport.Client
 
-	oac  OpenAPIClient
-	data types.Store
+	mu      sync.Mutex
+	refresh map[string]time.Time
+	oac     OpenAPIClient
+	data    types.Store
 }
 
 func NewWorker(c *transport.Client, data types.Store) *Worker {
@@ -33,8 +37,9 @@ func NewWorker(c *transport.Client, data types.Store) *Worker {
 
 		// Worker
 		w = &Worker{
-			Client: c,
-			data:   data,
+			Client:  c,
+			refresh: make(map[string]time.Time),
+			data:    data,
 		}
 
 		// OpenAPI
