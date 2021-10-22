@@ -62,10 +62,33 @@ func (c *Worker) Refresh() error {
 
 func (c *Worker) Start(ctx context.Context, downloaders int32) {
 	c.Client.Spawn(ctx, downloaders)
-	c.Client.Start()
+	c.Client.Go(c.initiate, nil)
 }
 
 func (c *Worker) Run(ctx context.Context, downloaders int32) {
 	c.Start(ctx, downloaders)
 	c.Wait()
+}
+
+func (w *Worker) initiate(_ *transport.Client, ctx context.Context, _ interface{}) error {
+	var ok = true
+
+	if !w.testCredentials(ctx) {
+		ok = false
+	}
+
+	if !w.testOauth2(ctx) {
+		ok = false
+	}
+
+	if ok {
+		w.Client.Start()
+	} else {
+		w.Client.Pause()
+	}
+	return nil
+}
+
+func (w *Worker) testCredentials(ctx context.Context) bool {
+	return true
 }
