@@ -170,11 +170,14 @@ func (c *Client) CallbackHandler(rw http.ResponseWriter, req *http.Request) erro
 
 // Token() lets us implement oauth2.TokenSource and capture token updates
 func (c *Client) Token() (*oauth2.Token, error) {
-	t, err := c.ts.Token()
-	if err == nil {
-		err = c.rememberToken(t)
+	if c.ts != nil {
+		t, err := c.ts.Token()
+		if err == nil {
+			err = c.rememberToken(t)
+		}
+		return t, err
 	}
-	return t, err
+	return nil, ErrTokenNotAvailable
 }
 
 // Do makes a request using the oauth2 token
