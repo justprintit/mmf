@@ -4,29 +4,56 @@ import (
 	"context"
 
 	"github.com/justprintit/mmf/api/library/store"
+	"github.com/justprintit/mmf/api/openapi"
 	"github.com/justprintit/mmf/api/transport"
 	"github.com/justprintit/mmf/types"
 )
 
+type OpenAPIClient struct {
+	openapi.ClientWithResponsesInterface
+	openapi.ClientInterface
+}
+
 type Worker struct {
 	*transport.Client
 
+	oac  OpenAPIClient
 	data types.Store
 }
 
 func NewWorker(c *transport.Client, data types.Store) *Worker {
+	var w *Worker
+
 	if c != nil {
 
+		// Data Store
 		if data == nil {
 			data, _ = store.NewDummy()
 		}
 
-		return &Worker{
+		// Worker
+		w = &Worker{
 			Client: c,
 			data:   data,
 		}
+
+		// OpenAPI
+		oac, err := openapi.NewClient(c.OpenAPIServer(),
+			openapi.WithHTTPClient(c.NewOauth2Doer()),
+			openapi.WithRequestEditorFn(w.openapiRequestEditor))
+
+		if err != nil {
+			panic(err)
+		}
+
+		w.oac = OpenAPIClient{
+			ClientInterface:              oac,
+			ClientWithResponsesInterface: &openapi.ClientWithResponses{oac},
+		}
+
 	}
-	return nil
+
+	return w
 }
 
 func (c *Worker) Refresh() error {
