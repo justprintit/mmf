@@ -78,9 +78,17 @@ func (c *Client) Context() context.Context {
 	return context.Background()
 }
 
-func (c *Client) Run(ctx context.Context, n int32) {
-	c.wq.Start(ctx, 1, n)
-	c.wq.Wait()
+func (c *Client) Spawn(ctx context.Context, downloaders int32) {
+	c.wq.Spawn(ctx, 1, downloaders)
+}
+
+func (c *Client) Start() {
+	c.wq.SetState(WorkQueueRunning)
+	c.wq.Poke()
+}
+
+func (c *Client) Pause() {
+	c.wq.SetState(WorkQueuePaused)
 }
 
 func (c *Client) Cancel() {
@@ -105,4 +113,8 @@ func (c *Client) Schedule(f QueueFunc, v interface{}) {
 
 func (c *Client) ScheduleDownloader(f QueueFunc, v interface{}) {
 	c.wq.Add(DownloadQueue, f, v)
+}
+
+func (c *Client) Go(f QueueFunc, v interface{}) {
+	c.wq.Go(f, v)
 }

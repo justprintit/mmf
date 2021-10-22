@@ -1,6 +1,8 @@
 package library
 
 import (
+	"context"
+
 	"github.com/justprintit/mmf/api/library/store"
 	"github.com/justprintit/mmf/api/transport"
 	"github.com/justprintit/mmf/types"
@@ -29,4 +31,14 @@ func NewWorker(c *transport.Client, data types.Store) *Worker {
 
 func (c *Worker) Refresh() error {
 	return nil
+}
+
+func (c *Worker) Start(ctx context.Context, downloaders int32) {
+	c.Client.Spawn(ctx, downloaders)
+	c.Client.Start()
+}
+
+func (c *Worker) Run(ctx context.Context, downloaders int32) {
+	c.Start(ctx, downloaders)
+	c.Wait()
 }

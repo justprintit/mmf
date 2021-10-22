@@ -44,7 +44,7 @@ type WorkQueue struct {
 	done   chan struct{}
 }
 
-func (wq *WorkQueue) setState(s WorkQueueState) {
+func (wq *WorkQueue) SetState(s WorkQueueState) {
 	wq.Lock()
 	defer wq.Unlock()
 
@@ -71,7 +71,7 @@ func (wq *WorkQueue) Init(c *Client, count int) {
 	wq.q = make([]Queue, count)
 }
 
-func (wq *WorkQueue) Start(ctx context.Context, limits ...int32) {
+func (wq *WorkQueue) Spawn(ctx context.Context, limits ...int32) {
 	wq.Lock()
 	defer wq.Unlock()
 
@@ -117,7 +117,7 @@ func (wq *WorkQueue) Start(ctx context.Context, limits ...int32) {
 		// wait for cancellation
 		select {
 		case <-wq.ctx.Done():
-			wq.setState(WorkQueueTerminating)
+			wq.SetState(WorkQueueTerminating)
 		}
 
 		// and wait for workers
