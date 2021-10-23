@@ -48,6 +48,13 @@ type Collection struct {
 	Url         *string  `json:"url,omitempty"`
 }
 
+// Dimensions defines model for Dimensions.
+type Dimensions struct {
+	X *int `json:"x,omitempty"`
+	Y *int `json:"y,omitempty"`
+	Z *int `json:"z,omitempty"`
+}
+
 // File defines model for File.
 type File struct {
 	Description *string `json:"description,omitempty"`
@@ -126,8 +133,8 @@ type License struct {
 	Value *bool   `json:"value,omitempty"`
 }
 
-// NotificationSettings defines model for NotificationSettings.
-type NotificationSettings struct {
+// NotificationSetting defines model for NotificationSetting.
+type NotificationSetting struct {
 	Group      *string `json:"group,omitempty"`
 	Icon       *string `json:"icon,omitempty"`
 	Id         *int    `json:"id,omitempty"`
@@ -272,10 +279,44 @@ type Print struct {
 	} `json:"thumbnail,omitempty"`
 }
 
+// Printer defines model for Printer.
+type Printer struct {
+	AutomaticSlicing *bool       `json:"automatic_slicing,omitempty"`
+	Brand            *string     `json:"brand,omitempty"`
+	Dimensions       *Dimensions `json:"dimensions,omitempty"`
+	Id               *int        `json:"id,omitempty"`
+	Image            *string     `json:"image,omitempty"`
+	Model            *string     `json:"model,omitempty"`
+	Name             *string     `json:"name,omitempty"`
+	NozzleDiameter   *float32    `json:"nozzle_diameter,omitempty"`
+	Premium          *bool       `json:"premium,omitempty"`
+	Website          *string     `json:"website,omitempty"`
+}
+
+// Printers defines model for Printers.
+type Printers struct {
+	Items      *[]Printer `json:"items,omitempty"`
+	TotalCount *int       `json:"total_count,omitempty"`
+}
+
+// SocialNetwork defines model for SocialNetwork.
+type SocialNetwork struct {
+	Id    *int    `json:"id,omitempty"`
+	Name  *string `json:"name,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
 // SocialNetworks defines model for SocialNetworks.
 type SocialNetworks struct {
-	Items      *[]map[string]interface{} `json:"items,omitempty"`
-	TotalCount *int                      `json:"total_count,omitempty"`
+	Items      *[]SocialNetwork `json:"items,omitempty"`
+	TotalCount *int             `json:"total_count,omitempty"`
+}
+
+// Timestamp defines model for Timestamp.
+type Timestamp struct {
+	Date         *string `json:"date,omitempty"`
+	Timezone     *string `json:"timezone,omitempty"`
+	TimezoneTime *int    `json:"timezone_time,omitempty"`
 }
 
 // User defines model for User.
@@ -296,11 +337,11 @@ type User struct {
 	IsStoreManager        *bool                   `json:"is_store_manager,omitempty"`
 	Likes                 *int                    `json:"likes,omitempty"`
 	Name                  *string                 `json:"name,omitempty"`
-	NotificationsSettings *[]NotificationSettings `json:"notifications_settings,omitempty"`
+	NotificationsSettings *[]NotificationSetting  `json:"notifications_settings,omitempty"`
 	Objects               *int                    `json:"objects,omitempty"`
 	Postcode              *map[string]interface{} `json:"postcode,omitempty"`
-	Printers              *UserPrinters           `json:"printers,omitempty"`
-	PrintingSince         *map[string]interface{} `json:"printing_since,omitempty"`
+	Printers              *Printers               `json:"printers,omitempty"`
+	PrintingSince         *Timestamp              `json:"printing_since,omitempty"`
 	ProfileSettingsUrl    *string                 `json:"profile_settings_url,omitempty"`
 	ProfileUrl            *string                 `json:"profile_url,omitempty"`
 	SocialNetworks        *SocialNetworks         `json:"social_networks,omitempty"`
@@ -309,12 +350,6 @@ type User struct {
 	Username              *string                 `json:"username,omitempty"`
 	Views                 *int                    `json:"views,omitempty"`
 	Website               *string                 `json:"website,omitempty"`
-}
-
-// UserPrinters defines model for UserPrinters.
-type UserPrinters struct {
-	Items      *[]map[string]interface{} `json:"items,omitempty"`
-	TotalCount *int                      `json:"total_count,omitempty"`
 }
 
 // Cat defines model for cat.

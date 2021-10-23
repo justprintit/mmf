@@ -771,15 +771,15 @@ components:
         total_collections:
           type: integer
         printing_since:
-          type: object # TBD
+          $ref: "#/components/schemas/Timestamp"
         notifications_settings:
           type: array
           items:
-            $ref: "#/components/schemas/NotificationSettings"
+            $ref: "#/components/schemas/NotificationSetting"
         social_networks:
           $ref: "#/components/schemas/SocialNetworks"
         printers:
-          $ref: "#/components/schemas/UserPrinters"
+          $ref: "#/components/schemas/Printers"
         following:
           type: boolean
         postcode:
@@ -792,7 +792,7 @@ components:
           type: integer
         email:
           type: string
-    NotificationSettings:
+    NotificationSetting:
       type: object
       properties:
         id:
@@ -815,8 +815,17 @@ components:
         items:
           type: array
           items:
-            type: object # TBD
-    UserPrinters:
+            $ref: "#/components/schemas/SocialNetwork"
+    SocialNetwork:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+    Printers:
       type: object
       properties:
         total_count:
@@ -824,7 +833,48 @@ components:
         items:
           type: array
           items:
-            type: object # TBD
+            $ref: "#/components/schemas/Printer"
+    Printer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        automatic_slicing:
+          type: boolean
+        premium:
+          type: boolean
+        model:
+          type: string
+        brand:
+          type: string
+        image:
+          type: string
+        website:
+          type: string
+        nozzle_diameter:
+          type: number
+        dimensions:
+          $ref: "#/components/schemas/Dimensions"
+    Dimensions:
+      type: object
+      properties:
+        x:
+          type: integer
+        "y":
+          type: integer
+        z:
+          type: integer
+    Timestamp:
+      type: object
+      properties:
+        date:
+          type: string
+        timezone:
+          type: string
+        timezone_time:
+          type: integer
     Objects:
       type: object
       properties:
