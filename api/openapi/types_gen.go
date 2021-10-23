@@ -126,6 +126,16 @@ type License struct {
 	Value *bool   `json:"value,omitempty"`
 }
 
+// NotificationSettings defines model for NotificationSettings.
+type NotificationSettings struct {
+	Group      *string `json:"group,omitempty"`
+	Icon       *string `json:"icon,omitempty"`
+	Id         *int    `json:"id,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	TemplateId *string `json:"template_id,omitempty"`
+	Value      *bool   `json:"value,omitempty"`
+}
+
 // Object defines model for Object.
 type Object struct {
 	// Available ONLY with Oauth connected User. Not with API key.
@@ -262,15 +272,49 @@ type Print struct {
 	} `json:"thumbnail,omitempty"`
 }
 
+// SocialNetworks defines model for SocialNetworks.
+type SocialNetworks struct {
+	Items      *[]map[string]interface{} `json:"items,omitempty"`
+	TotalCount *int                      `json:"total_count,omitempty"`
+}
+
 // User defines model for User.
 type User struct {
-	AvatarThumbnailUrl *string `json:"avatar_thumbnail_url,omitempty"`
-	AvatarUrl          *string `json:"avatar_url,omitempty"`
-	Bio                *string `json:"bio,omitempty"`
-	Name               *string `json:"name,omitempty"`
-	ProfileUrl         *string `json:"profile_url,omitempty"`
-	Username           *string `json:"username,omitempty"`
-	Website            *string `json:"website,omitempty"`
+	AllowEmail            *int                    `json:"allow_email,omitempty"`
+	AvatarThumbnailUrl    *string                 `json:"avatar_thumbnail_url,omitempty"`
+	AvatarUrl             *string                 `json:"avatar_url,omitempty"`
+	Bio                   *string                 `json:"bio,omitempty"`
+	Birthday              *map[string]interface{} `json:"birthday,omitempty"`
+	ContactNumber         *string                 `json:"contact_number,omitempty"`
+	CoverUrl              *string                 `json:"cover_url,omitempty"`
+	Email                 *string                 `json:"email,omitempty"`
+	Followers             *int                    `json:"followers,omitempty"`
+	Following             *bool                   `json:"following,omitempty"`
+	Followings            *int                    `json:"followings,omitempty"`
+	IsAdmin               *bool                   `json:"is_admin,omitempty"`
+	IsPremium             *bool                   `json:"is_premium,omitempty"`
+	IsStoreManager        *bool                   `json:"is_store_manager,omitempty"`
+	Likes                 *int                    `json:"likes,omitempty"`
+	Name                  *string                 `json:"name,omitempty"`
+	NotificationsSettings *[]NotificationSettings `json:"notifications_settings,omitempty"`
+	Objects               *int                    `json:"objects,omitempty"`
+	Postcode              *map[string]interface{} `json:"postcode,omitempty"`
+	Printers              *UserPrinters           `json:"printers,omitempty"`
+	PrintingSince         *map[string]interface{} `json:"printing_since,omitempty"`
+	ProfileSettingsUrl    *string                 `json:"profile_settings_url,omitempty"`
+	ProfileUrl            *string                 `json:"profile_url,omitempty"`
+	SocialNetworks        *SocialNetworks         `json:"social_networks,omitempty"`
+	TotalCollections      *int                    `json:"total_collections,omitempty"`
+	TotalPrints           *int                    `json:"total_prints,omitempty"`
+	Username              *string                 `json:"username,omitempty"`
+	Views                 *int                    `json:"views,omitempty"`
+	Website               *string                 `json:"website,omitempty"`
+}
+
+// UserPrinters defines model for UserPrinters.
+type UserPrinters struct {
+	Items      *[]map[string]interface{} `json:"items,omitempty"`
+	TotalCount *int                      `json:"total_count,omitempty"`
 }
 
 // Cat defines model for cat.

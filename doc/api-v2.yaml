@@ -1,3 +1,4 @@
+# vim: set ts=2 sw=2 et:
 openapi: 3.0.0
 info:
   title: MyMiniFactory API
@@ -735,16 +736,95 @@ components:
           type: string
         name:
           type: string
+        is_admin:
+          type: boolean
+        is_premium:
+          type: boolean
+        is_store_manager:
+          type: boolean
         profile_url:
+          type: string
+        profile_settings_url:
           type: string
         avatar_url:
           type: string
         avatar_thumbnail_url:
           type: string
+        cover_url:
+          type: string
         bio:
           type: string
         website:
           type: string
+        followings:
+          type: integer
+        followers:
+          type: integer
+        likes:
+          type: integer
+        views:
+          type: integer
+        objects:
+          type: integer
+        total_prints:
+          type: integer
+        total_collections:
+          type: integer
+        printing_since:
+          type: object # TBD
+        notifications_settings:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationSettings"
+        social_networks:
+          $ref: "#/components/schemas/SocialNetworks"
+        printers:
+          $ref: "#/components/schemas/UserPrinters"
+        following:
+          type: boolean
+        postcode:
+          type: object # TBD
+        contact_number:
+          type: string
+        birthday:
+          type: object # TBD
+        allow_email:
+          type: integer
+        email:
+          type: string
+    NotificationSettings:
+      type: object
+      properties:
+        id:
+          type: integer
+        template_id:
+          type: string
+        group:
+          type: string
+        name:
+          type: string
+        value:
+          type: boolean
+        icon:
+          type: string
+    SocialNetworks:
+      type: object
+      properties:
+        total_count:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object # TBD
+    UserPrinters:
+      type: object
+      properties:
+        total_count:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object # TBD
     Objects:
       type: object
       properties:
