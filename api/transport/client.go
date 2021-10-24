@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -20,7 +21,6 @@ const (
 	QueuesCount int = iota
 
 	DefaultServer = "https://www.myminifactory.com/"
-	ApiPath       = "/api/v2"
 )
 
 type Client struct {
@@ -74,15 +74,27 @@ func (c *Client) SetDefaults() error {
 	return nil
 }
 
-func (c *Client) OpenAPIServer() string {
+func (c *Client) ServerJoinPath(s string, args ...interface{}) string {
 	u, err := url.Parse(c.Server)
 	if err != nil {
 		panic(err)
 	}
+
+	if len(args) > 0 {
+		s = fmt.Sprintf(s, args...)
+	}
+
+	if s == "" {
+		// NOP
+		return c.Server
+	} else if s[0] != '/' {
+		s = "/" + s
+	}
+
 	if u.Path == "" {
-		u.Path = ApiPath
+		u.Path = s
 	} else {
-		u.Path = path.Clean(path.Join(u.Path, ApiPath))
+		u.Path = path.Clean(path.Join(u.Path, s))
 	}
 
 	return u.String()

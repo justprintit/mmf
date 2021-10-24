@@ -20,7 +20,13 @@ import (
 const (
 	CodeExchangeTimeout = 2 * time.Second
 	RandomStateLength   = 32
+
+	ApiPath = "/api/v2"
 )
+
+func (c *Client) OpenAPIServer() string {
+	return c.ServerJoinPath(ApiPath)
+}
 
 func WithOauth2(cred mmf.Client, base string, callback string) ClientOptionFunc {
 	// callback = base + path
