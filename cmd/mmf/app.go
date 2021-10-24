@@ -22,7 +22,9 @@ import (
 	"go.sancus.dev/web/router"
 
 	"github.com/justprintit/mmf/api/library"
+	"github.com/justprintit/mmf/api/library/store/bolt"
 	"github.com/justprintit/mmf/api/transport"
+	"github.com/justprintit/mmf/types"
 	"github.com/justprintit/mmf/web/server"
 )
 
@@ -41,6 +43,7 @@ type App struct {
 	dumpTransport io.Writer
 
 	mu     sync.Mutex
+	data   types.Store
 	server *server.Server
 	worker *library.Worker
 }
@@ -200,6 +203,12 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 		return nil, err
 	}
 
+	// library
+	data, err := bolt.New(cfg.Data, types.LibraryEvents{})
+	if err != nil {
+		return nil, err
+	}
+
 	// server
 	srv, err := cfg.Server.NewServer(m)
 	if err != nil {
@@ -231,15 +240,19 @@ func NewApp(cfg Config, cfgFile string) (*App, error) {
 		return nil, err
 	}
 
-	w := library.NewWorker(mmf, nil)
+	w := library.NewWorker(mmf, data)
 
 	// oauth2
 	r.TryHandleFunc(RedirectPath, mmf.RedirectHandler)
 	r.TryHandleFunc(CallbackPath, mmf.CallbackHandler)
 
+	m.data = data  // library
 	m.worker = w   // mmf client
 	m.server = srv // http server
 	m.Handler = r  // router
+
+	// and start preloading data
+	go data.Load()
 
 	return m, nil
 }

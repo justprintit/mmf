@@ -13,6 +13,7 @@ require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/cobra v1.2.1
 	github.com/tidwall/pretty v1.2.0
+	github.com/timshannon/bolthold v0.0.0-20210913165410-232392fc8a6a
 	go.sancus.dev/config v0.8.0
 	go.sancus.dev/core v0.16.0
 	go.sancus.dev/web v0.36.0
