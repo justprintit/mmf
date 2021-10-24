@@ -4,7 +4,12 @@ package library
 
 import (
 	"github.com/justprintit/mmf/api/openapi"
+	"github.com/justprintit/mmf/util"
 )
+
+// prevent unused import errors
+var _ = util.Pages
+var _ = openapi.NewClient
 
 // UserRequestParams are the parameters for User requests
 type UserRequestParams struct {
@@ -46,5 +51,13 @@ func (rp UserRequestParams) AsPerPagePointer() *openapi.PerPage {
 		return &v
 	} else {
 		return nil
+	}
+}
+
+func (rp UserRequestParams) Pages(total int) int {
+	if rp.PerPage > 0 {
+		return util.Pages(total, rp.PerPage, rp.PerPage)
+	} else {
+		return 0
 	}
 }

@@ -12,7 +12,12 @@ package ${GOPACKAGE:-undefined}
 
 import (
 	"github.com/justprintit/mmf/api/openapi"
+	"github.com/justprintit/mmf/util"
 )
+
+// prevent unused import errors
+var _ = util.Pages
+var _ = openapi.NewClient
 EOT
 
 generate() {
@@ -69,6 +74,18 @@ func (rp ${n}RequestParams) As${k}Pointer() *openapi.${k} {
 	}
 }
 EOT
+		if [ "PerPage" = "$k" ]; then
+			cat<<EOT
+
+func (rp ${n}RequestParams) Pages(total int) int {
+	if rp.$k > 0 {
+		return util.Pages(total, rp.$k, rp.$k)
+	} else {
+		return 0
+	}
+}
+EOT
+		fi
 	done
 }
 
