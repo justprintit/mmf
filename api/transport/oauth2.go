@@ -198,7 +198,7 @@ func (c *Client) NewOauth2Doer() HttpRequestDoerFunc {
 	}
 
 	fn := func(req *http.Request) (*http.Response, error) {
-		resp, err := rt.Do(req.WithContext(c.Context()))
+		resp, err := rt.Do(req)
 		if err == nil {
 			switch resp.StatusCode {
 			case http.StatusUnauthorized:
