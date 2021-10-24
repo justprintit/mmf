@@ -782,7 +782,7 @@ components:
         contact_number:
           type: string
         birthday:
-          type: object
+          $ref: '#/components/schemas/Timestamp'
         allow_email:
           type: integer
         email:

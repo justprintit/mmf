@@ -325,7 +325,7 @@ type User struct {
 	AvatarThumbnailUrl    *string                 `json:"avatar_thumbnail_url,omitempty"`
 	AvatarUrl             *string                 `json:"avatar_url,omitempty"`
 	Bio                   *string                 `json:"bio,omitempty"`
-	Birthday              *map[string]interface{} `json:"birthday,omitempty"`
+	Birthday              *Timestamp              `json:"birthday,omitempty"`
 	ContactNumber         *string                 `json:"contact_number,omitempty"`
 	CoverUrl              *string                 `json:"cover_url,omitempty"`
 	Email                 *string                 `json:"email,omitempty"`
