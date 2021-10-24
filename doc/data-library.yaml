@@ -1,0 +1,10 @@
+openapi: 3.0.0
+info:
+  title: data-library
+  version: '1.0'
+servers:
+  - url: 'https://www.myminifactory.com/data-library'
+paths: {}
+components:
+  schemas: {}
+  securitySchemes: {}
