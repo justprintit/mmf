@@ -61,7 +61,8 @@ func (m *entry) Name() string {
 type Library struct {
 	sync.Mutex
 
-	nodes [NodeTypes]map[string]Node
+	Events LibraryEvents
+	nodes  [NodeTypes]map[string]Node
 }
 
 func (m *Library) GetNode(t NodeType, id string) Node {
