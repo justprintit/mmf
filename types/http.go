@@ -49,3 +49,35 @@ func TransportUnwrap(v interface{}) *http.Transport {
 	}
 	return nil
 }
+
+// Transport implements HttpRequestDoer, http.RoundTripper, and TransportUnwrapper
+type Transport struct {
+	doer HttpRequestDoer
+	do   HttpRequestDoerFunc
+}
+
+func NewTransport(doer HttpRequestDoer, do HttpRequestDoerFunc) *Transport {
+	if doer != nil || do != nil {
+		return &Transport{doer, do}
+	} else {
+		return nil
+	}
+}
+
+func (rt *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if rt.do != nil {
+		return rt.do(req)
+	} else if rt.doer != nil {
+		return rt.doer.Do(req)
+	} else {
+		return nil, nil
+	}
+}
+
+func (rt *Transport) Do(req *http.Request) (*http.Response, error) {
+	return rt.RoundTrip(req)
+}
+
+func (rt *Transport) Unwrap() *http.Transport {
+	return TransportUnwrap(rt.doer)
+}

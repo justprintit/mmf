@@ -188,7 +188,7 @@ func (c *Client) Token() (*oauth2.Token, error) {
 }
 
 // Do makes a request using the oauth2 token
-func (c *Client) NewOauth2Doer() types.HttpRequestDoerFunc {
+func (c *Client) NewOauth2Doer() types.HttpRequestDoer {
 
 	rt := &http.Client{
 		Transport: &oauth2.Transport{
@@ -209,5 +209,5 @@ func (c *Client) NewOauth2Doer() types.HttpRequestDoerFunc {
 		return resp, err
 	}
 
-	return fn
+	return types.NewTransport(rt, fn)
 }
