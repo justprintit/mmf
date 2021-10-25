@@ -14,6 +14,7 @@ import (
 	"go.sancus.dev/web/errors"
 
 	"github.com/justprintit/mmf/api/mmf"
+	"github.com/justprintit/mmf/types"
 	"github.com/justprintit/mmf/util"
 )
 
@@ -187,7 +188,7 @@ func (c *Client) Token() (*oauth2.Token, error) {
 }
 
 // Do makes a request using the oauth2 token
-func (c *Client) NewOauth2Doer() HttpRequestDoerFunc {
+func (c *Client) NewOauth2Doer() types.HttpRequestDoerFunc {
 
 	rt := &http.Client{
 		Transport: &oauth2.Transport{

@@ -1,8 +1,12 @@
-package transport
+package types
 
 import (
 	"net/http"
 )
+
+type HttpRequestDoer interface {
+	Do(*http.Request) (*http.Response, error)
+}
 
 type HttpRequestDoerFunc func(*http.Request) (*http.Response, error)
 
