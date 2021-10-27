@@ -23,8 +23,8 @@ import (
 
 	"github.com/justprintit/mmf/api/library"
 	"github.com/justprintit/mmf/api/library/store/bolt"
+	"github.com/justprintit/mmf/api/library/types"
 	"github.com/justprintit/mmf/api/transport"
-	"github.com/justprintit/mmf/types"
 	"github.com/justprintit/mmf/web/server"
 )
 

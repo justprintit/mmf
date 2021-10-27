@@ -7,7 +7,7 @@ import (
 
 	"github.com/timshannon/bolthold"
 
-	"github.com/justprintit/mmf/types"
+	"github.com/justprintit/mmf/api/library/types"
 )
 
 const (

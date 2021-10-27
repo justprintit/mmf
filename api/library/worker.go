@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/justprintit/mmf/api/library/store"
+	"github.com/justprintit/mmf/api/library/types"
 	"github.com/justprintit/mmf/api/openapi"
 	"github.com/justprintit/mmf/api/transport"
-	"github.com/justprintit/mmf/types"
 )
 
 type OpenAPIClient struct {

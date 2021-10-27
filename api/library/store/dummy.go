@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/justprintit/mmf/types"
+	"github.com/justprintit/mmf/api/library/types"
 )
 
 type DummyStore struct {
