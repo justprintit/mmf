@@ -4,7 +4,7 @@ set -eu
 
 : ${GOPACKAGE:=dl}
 
-OAPI_FILE="../../doc/data-library.yaml"
+OAPI_FILE="../../specs/data-library.yaml"
 OAPI_CODEGEN_VER="v1.8.3"
 OAPI_CODEGEN_URL="github.com/deepmap/oapi-codegen/cmd/oapi-codegen@$OAPI_CODEGEN_VER"
 

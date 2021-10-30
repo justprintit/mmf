@@ -4,7 +4,7 @@ set -eu
 
 : ${GOPACKAGE:=openapi}
 
-OAPI_FILE="../../doc/api-v2.yaml"
+OAPI_FILE="../../specs/api-v2.yaml"
 OAPI_CODEGEN_VER="v1.8.3"
 OAPI_CODEGEN_URL="github.com/deepmap/oapi-codegen/cmd/oapi-codegen@$OAPI_CODEGEN_VER"
 
