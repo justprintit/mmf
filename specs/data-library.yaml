@@ -4,7 +4,128 @@ info:
   version: '1.0'
 servers:
   - url: 'https://www.myminifactory.com/data-library'
-paths: {}
+paths:
+  /purchases:
+    get:
+      summary: GET Puchased objects
+      tags: []
+      operationId: get-purchases
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Objects'
+    parameters: []
 components:
-  schemas: {}
+  schemas:
+    Object:
+      description: ''
+      type: object
+      properties:
+        id:
+          type: integer
+        wide:
+          type: boolean
+        name:
+          type: string
+          minLength: 1
+        document_name_s:
+          type: string
+          minLength: 1
+        is_purchased:
+          type: boolean
+        show_url:
+          type: string
+          minLength: 1
+        absolute_url:
+          type: string
+          minLength: 1
+        download_url:
+          type: string
+          minLength: 1
+        price:
+          type: object
+          required:
+            - symbol
+            - value
+          properties:
+            currency:
+              type: string
+            symbol:
+              type: string
+              minLength: 1
+            value:
+              type: number
+        is_private:
+          type: boolean
+        username:
+          type: string
+          minLength: 1
+        visits:
+          type: integer
+        obj_img:
+          type: string
+          minLength: 1
+          format: uri
+          readOnly: true
+        user_url:
+          type: string
+          minLength: 1
+          format: uri
+          readOnly: true
+        user_img:
+          type: string
+          minLength: 1
+          format: uri
+        user_name:
+          type: string
+          minLength: 1
+        user_collections:
+          type: array
+          items:
+            type: object
+        archives: {}
+        type:
+          type: string
+          minLength: 1
+      required:
+        - id
+        - wide
+        - name
+        - document_name_s
+        - is_purchased
+        - show_url
+        - absolute_url
+        - download_url
+        - price
+        - is_private
+        - username
+        - visits
+        - obj_img
+        - user_url
+        - user_img
+        - user_name
+        - user_collections
+        - type
+    Objects:
+      title: Objects
+      type: object
+      properties:
+        total_count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Object'
   securitySchemes: {}
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
