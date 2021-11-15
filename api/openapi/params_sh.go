@@ -1,15 +1,13 @@
-package library
+package openapi
 
 //go:generate ./params.sh
 
 import (
-	"github.com/justprintit/mmf/api/openapi"
 	"github.com/justprintit/mmf/util"
 )
 
 // prevent unused import errors
 var _ = util.Pages
-var _ = openapi.NewClient
 
 // UserRequestParams are the parameters for User requests
 type UserRequestParams struct {
@@ -18,11 +16,11 @@ type UserRequestParams struct {
 	PerPage  int
 }
 
-func (rp UserRequestParams) AsUsername() openapi.Username {
-	return openapi.Username(rp.Username)
+func (rp UserRequestParams) AsUsername() Username {
+	return Username(rp.Username)
 }
 
-func (rp UserRequestParams) AsUsernamePointer() *openapi.Username {
+func (rp UserRequestParams) AsUsernamePointer() *Username {
 	if v := rp.AsUsername(); v != "" {
 		return &v
 	} else {
@@ -30,11 +28,11 @@ func (rp UserRequestParams) AsUsernamePointer() *openapi.Username {
 	}
 }
 
-func (rp UserRequestParams) AsPage() openapi.Page {
-	return openapi.Page(rp.Page)
+func (rp UserRequestParams) AsPage() Page {
+	return Page(rp.Page)
 }
 
-func (rp UserRequestParams) AsPagePointer() *openapi.Page {
+func (rp UserRequestParams) AsPagePointer() *Page {
 	if v := rp.AsPage(); v > 0 {
 		return &v
 	} else {
@@ -42,11 +40,11 @@ func (rp UserRequestParams) AsPagePointer() *openapi.Page {
 	}
 }
 
-func (rp UserRequestParams) AsPerPage() openapi.PerPage {
-	return openapi.PerPage(rp.PerPage)
+func (rp UserRequestParams) AsPerPage() PerPage {
+	return PerPage(rp.PerPage)
 }
 
-func (rp UserRequestParams) AsPerPagePointer() *openapi.PerPage {
+func (rp UserRequestParams) AsPerPagePointer() *PerPage {
 	if v := rp.AsPerPage(); v > 0 {
 		return &v
 	} else {

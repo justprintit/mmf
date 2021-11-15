@@ -11,13 +11,11 @@ package ${GOPACKAGE:-undefined}
 //go:generate $0${1:+ $*}
 
 import (
-	"github.com/justprintit/mmf/api/openapi"
 	"github.com/justprintit/mmf/util"
 )
 
 // prevent unused import errors
 var _ = util.Pages
-var _ = openapi.NewClient
 EOT
 
 generate() {
@@ -62,11 +60,11 @@ EOT
 
 		cat <<EOT
 
-func (rp ${n}RequestParams) As${k}() openapi.${k} {
-	return openapi.${k}(rp.$k)
+func (rp ${n}RequestParams) As${k}() ${k} {
+	return ${k}(rp.$k)
 }
 
-func (rp ${n}RequestParams) As${k}Pointer() *openapi.${k} {
+func (rp ${n}RequestParams) As${k}Pointer() *${k} {
 	if v := rp.As${k}(); $cond {
 		return &v
 	} else {
