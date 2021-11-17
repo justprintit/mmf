@@ -12,7 +12,7 @@ fmt:
 	$(GO) mod tidy || true
 
 generate:
-	@git grep -l '^//go:generate' | sed -n -e 's|\(.*\)/[^/]\+\.go$$|\1|p' | sort -u | while read d; do \
+	@git grep -l '^//go:generate' | xargs -r -n1 dirname | sort -u | while read d; do \
 		git grep -l '^//go:generate' "$$d"/*.go | xargs -r $(GO) generate $(GOGENERATE_FLAGS); \
 	done
 
