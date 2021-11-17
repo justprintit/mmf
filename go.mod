@@ -3,6 +3,7 @@ module github.com/justprintit/mmf
 go 1.16
 
 require (
+	github.com/99designs/gqlgen v0.14.0
 	github.com/deepmap/oapi-codegen v1.8.3
 	github.com/frankban/quicktest v1.13.1 // indirect
 	github.com/juju/go4 v0.0.0-20160222163258-40d72ab9641a // indirect
@@ -14,6 +15,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/tidwall/pretty v1.2.0
 	github.com/timshannon/bolthold v0.0.0-20210913165410-232392fc8a6a
+	github.com/vektah/gqlparser/v2 v2.2.0
 	go.sancus.dev/config v0.8.0
 	go.sancus.dev/core v0.16.0
 	go.sancus.dev/web v0.36.0
